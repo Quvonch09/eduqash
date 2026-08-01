@@ -8,6 +8,7 @@ import {
   Building2,
   BookOpen,
   Users,
+  MessageSquare,
   BarChart3,
   LogOut,
   GraduationCap,
@@ -45,6 +46,11 @@ export default function AdminSidebar() {
       name: "Ustozlar",
       href: "/admin/teachers",
       icon: Users,
+    },
+    {
+      name: "Izohlar va Reyting",
+      href: "/admin/feedbacks",
+      icon: MessageSquare,
     },
     {
       name: "Statistika",

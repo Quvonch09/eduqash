@@ -60,6 +60,15 @@ export interface Teacher {
   centerId: string;
 }
 
+export interface Feedback {
+  id: string;
+  centerId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 export interface SearchLog {
   query: string;
   count: number;
@@ -79,4 +88,5 @@ export interface Stats {
   searchLogs: SearchLog[];
   centerViews: CenterViewLog[];
   directionViews: DirectionViewLog[];
+  totalVisitors: number;
 }

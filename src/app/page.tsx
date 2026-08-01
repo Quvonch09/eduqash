@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useEduStore } from "@/store/useEduStore";
 import { LearningCenter, District, Direction } from "@/types";
 import Navbar from "@/components/user/Navbar";
@@ -19,6 +19,8 @@ import {
   Users,
   Award,
   GraduationCap,
+  MessageSquare,
+  Globe,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -60,6 +62,8 @@ const POPULAR_TAGS: Direction[] = [
 export default function LandingPage() {
   const centers = useEduStore((state) => state.centers);
   const courses = useEduStore((state) => state.courses);
+  const feedbacks = useEduStore((state) => state.feedbacks);
+  const stats = useEduStore((state) => state.stats);
   const searchQuery = useEduStore((state) => state.searchQuery);
   const setSearchQuery = useEduStore((state) => state.setSearchQuery);
   const selectedDistrict = useEduStore((state) => state.selectedDistrict);
@@ -67,11 +71,23 @@ export default function LandingPage() {
   const incrementCenterView = useEduStore((state) => state.incrementCenterView);
   const trackDirectionView = useEduStore((state) => state.trackDirectionView);
   const trackSearch = useEduStore((state) => state.trackSearch);
+  const incrementTotalVisitors = useEduStore((state) => state.incrementTotalVisitors);
 
   const [selectedCenter, setSelectedCenter] = useState<LearningCenter | null>(
     null
   );
   const [viewMode, setViewMode] = useState<"grid" | "map" | "split">("split");
+
+  // Track site visitor session
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasVisited = sessionStorage.getItem("eduqash_visited");
+      if (!hasVisited) {
+        sessionStorage.setItem("eduqash_visited", "true");
+        incrementTotalVisitors();
+      }
+    }
+  }, [incrementTotalVisitors]);
 
   // Real-time filtering based on searchQuery, district & course directions
   const filteredCenters = useMemo(() => {
@@ -115,6 +131,8 @@ export default function LandingPage() {
     trackDirectionView(tag);
   };
 
+  const totalVisitors = stats.totalVisitors || 1420;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-brand-500 selection:text-white transition-colors duration-200">
       <Navbar />
@@ -132,7 +150,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-amber-300 border border-white/20 backdrop-blur-md text-xs sm:text-sm font-semibold"
           >
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>Qashqadaryo viloyati bo'yicha yagona platforma</span>
+            <span>Qashqadaryo viloyati bo'yicha yagona ta'lim platformasi</span>
           </motion.div>
 
           <motion.h1
@@ -141,7 +159,7 @@ export default function LandingPage() {
             transition={{ delay: 0.1 }}
             className="text-2xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight"
           >
-            Qashqadaryoda o'z <span className="text-amber-400">yo'nalishingni</span> top
+            Qashqadaryoda o'z <span className="text-amber-400">yo'nalishingizni</span> toping
           </motion.h1>
 
           <motion.p
@@ -150,8 +168,25 @@ export default function LandingPage() {
             transition={{ delay: 0.2 }}
             className="text-sm sm:text-lg text-slate-200 max-w-2xl mx-auto font-medium leading-relaxed px-2"
           >
-            Qarshi, Shahrisabz, Kitob, Koson va boshqa tumanlardagi eng saralangan o'quv markazlari hamda malakali ustozlarni oson toping.
+            Qarshi, Shahrisabz, Kitob, Koson va boshqa tumanlardagi eng nufuzli o'quv markazlari hamda malakali ustozlarni oson toping.
           </motion.p>
+
+          {/* Dynamic Platform Counter Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-200 pt-2"
+          >
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15">
+              <Globe className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{totalVisitors} ta tashrif buyuruvchi</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15">
+              <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+              <span>{feedbacks.length} ta izoh va fikr-mulohaza</span>
+            </div>
+          </motion.div>
 
           {/* Search Box */}
           <motion.div
@@ -166,7 +201,7 @@ export default function LandingPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Yo'nalish kiriting, masalan: IT, Ingliz tili..."
+                placeholder="Yo'nalish kiriting, masalan: IT, Ingliz tili, Matematika..."
                 className="w-full bg-transparent text-slate-900 dark:text-white font-medium placeholder-slate-400 text-xs sm:text-base focus:outline-none px-1 sm:px-2 py-1"
               />
               {searchQuery && (
@@ -303,7 +338,7 @@ export default function LandingPage() {
               <Search className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              Ushbu qidiruv bo'yicha markaz topilmadi
+              Ushbu qidiruv bo'yicha o'quv markaz topilmadi
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               Iltimos, boshqa kalit so'z yoki barcha tumanlar bo'yicha qayta qidirib ko'ring.
@@ -373,7 +408,7 @@ export default function LandingPage() {
               <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold mx-auto md:mx-0 shadow-lg">
                 <Building2 className="w-6 h-6" />
               </div>
-              <h4 className="text-base sm:text-lg font-bold">Tekshirilgan O'quv Markazlar</h4>
+              <h4 className="text-base sm:text-lg font-bold">Tekshirilgan O'quv Markazlari</h4>
               <p className="text-xs text-slate-300 leading-relaxed">
                 Qashqadaryodagi nufuzli va barcha qulayliklarga ega o'quv markazlari katalogi.
               </p>
@@ -393,7 +428,7 @@ export default function LandingPage() {
               </div>
               <h4 className="text-base sm:text-lg font-bold">To'g'ridan-to'g me Bog'lanish</h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Telefon va Telegram orqali o'quv markaz va ustozlar bilan bevosita muloqot qiling.
+                Telefon va Telegram orqali o'quv markaz hamda ustozlar bilan bevosita muloqot qiling.
               </p>
             </div>
           </div>

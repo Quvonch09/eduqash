@@ -1,14 +1,14 @@
-import { LearningCenter, Course, Teacher, Stats } from "@/types";
+import { LearningCenter, Course, Teacher, Stats, Feedback } from "@/types";
 
 export const initialCenters: LearningCenter[] = [
   {
     id: "center-1",
     name: "Sfera Academy",
-    address: "Qarshi shahar, Mustaqillik shoh ko'chasi, 45-uy",
+    address: "Qarshi shahri, Mustaqillik shoh ko'chasi, 45-uy",
     district: "Qarshi",
     phone: "+998 90 123 45 67",
     image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
-    description: "Sfera Academy — Qashqadaryodagi zamonaviy IT va dasturlash akademiyasi. Biz o'quvchilarimizga zamonaviy kasblarni sifatli nazariya va amaliyot bilan o'rgatamiz.",
+    description: "Sfera Academy — Qashqadaryodagi zamonaviy IT va dasturlash akademiyasi. O'quvchilarimizga zamonaviy kasblarni sifatli nazariya hamda amaliyot bilan mukammal o'rgatamiz.",
     rating: 4.9,
     viewsCount: 342,
     lat: 38.865,
@@ -18,11 +18,11 @@ export const initialCenters: LearningCenter[] = [
   {
     id: "center-2",
     name: "Ideal Academy",
-    address: "Qarshi shahar, O'zbekiston ko'chasi, 12-uy (Mo'ljal: Markaziy Park)",
+    address: "Qarshi shahri, O'zbekiston ko'chasi, 12-uy (Mo'ljal: Markaziy bog')",
     district: "Qarshi",
     phone: "+998 91 234 56 78",
     image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80",
-    description: "Chet tillari va maktab fanlarini chuqurlashtirilgan tartibda o'rgatuvchi yetakchi o'quv markazi. IELTS 8+ natijaga ega tajribali ustozlar.",
+    description: "Chet tillari va maktab fanlarini chuqurlashtirilgan tartibda o'rgatuvchi yetakchi ta'lim markazi. IELTS 8.5+ natijaga ega tajribali ustozlar.",
     rating: 4.8,
     viewsCount: 289,
     lat: 38.857,
@@ -32,11 +32,11 @@ export const initialCenters: LearningCenter[] = [
   {
     id: "center-3",
     name: "Progress School Shahrisabz",
-    address: "Shahrisabz shahar, Amir Temur ko'chasi, 88-uy",
+    address: "Shahrisabz shahri, Amir Temur ko'chasi, 88-uy",
     district: "Shahrisabz",
     phone: "+998 97 345 67 89",
     image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80",
-    description: "Shahrisabz shahridagi eng yirik STEM va robototexnika o'quv markazi. Bolalar uchun mantiqiy fikrlash va muhandislik asoslari.",
+    description: "Shahrisabz shahridagi eng yirik STEM va robototexnika o'quv markazi. Mantiqiy fikrlash va muhandislik asoslarini amalda o'rgatamiz.",
     rating: 4.7,
     viewsCount: 195,
     lat: 39.055,
@@ -50,7 +50,7 @@ export const initialCenters: LearningCenter[] = [
     district: "Kitob",
     phone: "+998 93 456 78 90",
     image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=800&q=80",
-    description: "Abituriyentlarni oliygohlarga tayyorlash bo'yicha 95% natijaga ega o'quv markazi. Kimyo, biologiya va ona tili fanlaridan intensiv darslar.",
+    description: "Abituriyentlarni oliygohlarga tayyorlash bo'yicha 95% muvaffaqiyatli natijaga ega ta'lim maskani. Kimyo, biologiya va ona tili fanlaridan intensiv darslar.",
     rating: 4.9,
     viewsCount: 156,
     lat: 39.123,
@@ -64,7 +64,7 @@ export const initialCenters: LearningCenter[] = [
     district: "Koson",
     phone: "+998 94 567 89 01",
     image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=800&q=80",
-    description: "Koson tumanida nemis tili, ingliz tili va matematika fanlarini chuqurlashtirib o'rgatish markazi. Germaniyada o'qish dasturlari.",
+    description: "Koson tumanida nemis tili, ingliz tili va matematika fanlarini chuqurlashtirib o'rgatish markazi. Xalqaro ta'lim dasturlariga tayyorlov.",
     rating: 4.6,
     viewsCount: 132,
     lat: 39.038,
@@ -74,7 +74,7 @@ export const initialCenters: LearningCenter[] = [
   {
     id: "center-6",
     name: "IT Park Qarshi Branch",
-    address: "Qarshi shahar, Nasaf ko'chasi, IT Park binosi",
+    address: "Qarshi shahri, Nasaf ko'chasi, IT Park binosi",
     district: "Qarshi",
     phone: "+998 75 221 00 11",
     image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
@@ -88,11 +88,11 @@ export const initialCenters: LearningCenter[] = [
   {
     id: "center-7",
     name: "Registon Qarshi",
-    address: "Qarshi shahar, Amir Temur shoh ko'chasi, 102-uy",
+    address: "Qarshi shahri, Amir Temur shoh ko'chasi, 102-uy",
     district: "Qarshi",
     phone: "+998 99 678 90 12",
     image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
-    description: "Respublika darajasidagi brendning Qarshi filiali. Arab tili, Rus tili hamda Aniq va Tabiiy fanlar intensiv tayyorlovi.",
+    description: "Respublika darajasidagi mashhur ta'lim brendining Qarshi filiali. Arab tili, Rus tili hamda Aniq va Tabiiy fanlar intensiv tayyorlovi.",
     rating: 4.8,
     viewsCount: 220,
     lat: 38.853,
@@ -150,7 +150,7 @@ export const initialTeachers: Teacher[] = [
     photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
     bio: "IELTS 8.5 sohibasi. O'quvchilarining 90% i IELTS 7.0 dan yuqori ball oladi.",
     experience: "6 yil",
-    results: ["IELTS 8.5 ball", "300+ shogirdi grand asosida OTMga kirdi"],
+    results: ["IELTS 8.5 ball", "300+ shogirdi grant asosida OTMga kirdi"],
     contact: {
       phone: "+998 91 234 56 78",
       telegram: "@malika_ielts",
@@ -175,7 +175,7 @@ export const initialTeachers: Teacher[] = [
     centerId: "center-4",
     name: "Dilnoza Boboyeva",
     photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
-    bio: "Biologiya va Kimyo fanlari nomzodi. Abituriyentlarni 100% natija bilan tayyorlaydi.",
+    bio: "Biologiya va Kimyo fanlari nomzodi. Abituriyentlarni 100% yuqori natija bilan tayyorlaydi.",
     experience: "8 yil",
     results: ["Tibbiyot Akademiyasiga 200+ shogird", "Kimyo olimpiada ustozing"],
     contact: {
@@ -289,6 +289,49 @@ export const initialCourses: Course[] = [
   },
 ];
 
+export const initialFeedbacks: Feedback[] = [
+  {
+    id: "fb-1",
+    centerId: "center-1",
+    userName: "Boburmirzo Umarov",
+    rating: 5,
+    comment: "Sfera Academydagi Frontend kursi juda ajoyib! Ustozlar real amaliy loyihalar ustida ishlatadi. Hozirda o'zim ham frilanserman.",
+    createdAt: "2024-05-10",
+  },
+  {
+    id: "fb-2",
+    centerId: "center-1",
+    userName: "Shahnoza Karimova",
+    rating: 5,
+    comment: "Markaz binosi juda shinam, komputerlar va internet tezi. Python kursini tamomladim, juda mamnunman!",
+    createdAt: "2024-05-18",
+  },
+  {
+    id: "fb-3",
+    centerId: "center-2",
+    userName: "Jahongir Toirov",
+    rating: 5,
+    comment: "Malika ustozning IELTS darslaridan so'ng 7.5 ball oldim! Raqobatsiz ta'lim markazi Qarshida.",
+    createdAt: "2024-06-01",
+  },
+  {
+    id: "fb-4",
+    centerId: "center-3",
+    userName: "Aziza Yoqubova",
+    rating: 4,
+    comment: "Farzandim robototexnika kursiga qatnayapti. Mantiqiy fikrlashi juda o'sdi, ustozlarga rahmat!",
+    createdAt: "2024-06-12",
+  },
+  {
+    id: "fb-5",
+    centerId: "center-6",
+    userName: "Alisher Ergashev",
+    rating: 5,
+    comment: "IT Park Qarshi filialida UI/UX dizayn o'rganyapman. Muhit va imkoniyatlar ajoyib darajada!",
+    createdAt: "2024-06-25",
+  },
+];
+
 export const initialStats: Stats = {
   searchLogs: [
     { query: "IT", count: 245 },
@@ -312,4 +355,5 @@ export const initialStats: Stats = {
     { direction: "Robototexnika", count: 180 },
     { direction: "Biologiya", count: 145 },
   ],
+  totalVisitors: 1420,
 };

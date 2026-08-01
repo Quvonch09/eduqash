@@ -11,6 +11,8 @@ import {
   Award,
   BarChart2,
   PieChart as PieChartIcon,
+  Globe,
+  MessageSquare,
 } from "lucide-react";
 import {
   BarChart,
@@ -30,6 +32,7 @@ const PIE_COLORS = ["#2563EB", "#F59E0B", "#10B981", "#8B5CF6", "#EC4899", "#636
 export default function AdminStatisticsPage() {
   const centers = useEduStore((state) => state.centers);
   const courses = useEduStore((state) => state.courses);
+  const feedbacks = useEduStore((state) => state.feedbacks);
   const stats = useEduStore((state) => state.stats);
 
   const [isMounted, setIsMounted] = useState(false);
@@ -74,6 +77,8 @@ export default function AdminStatisticsPage() {
     return sorted.slice(0, 5);
   }, [centers]);
 
+  const totalVisitors = stats.totalVisitors || 1420;
+
   if (!isMounted) {
     return (
       <div className="p-8 text-center text-slate-400 font-semibold animate-pulse">
@@ -90,7 +95,7 @@ export default function AdminStatisticsPage() {
           Tahlil va Statistika
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Foydalanuvchilarning real vaqtdagi qidiruv va ko'rish ko'rsatkichlari
+          Foydalanuvchilarning real vaqtdagi tashrif, qidiruv va fikr-mulohaza ko'rsatkichlari
         </p>
       </div>
 
@@ -99,34 +104,34 @@ export default function AdminStatisticsPage() {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              Jami Markazlar
+              Sayt Tashrifchilari
             </span>
             <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {centers.length}
+              {totalVisitors}
             </span>
             <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 inline-block">
-              Barcha tumanlarda
+              Unikal tashrif buyuruvchilar
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-            <Building2 className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <Globe className="w-6 h-6" />
           </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              Mavjud Kurslar
+              Fikr-mulohazalar
             </span>
             <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {courses.length}
+              {feedbacks.length}
             </span>
-            <span className="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-1 inline-block">
-              Faol o'quv dasturlari
+            <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1 inline-block">
+              Qoldirilgan izohlar
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <BookOpen className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <MessageSquare className="w-6 h-6" />
           </div>
         </div>
 

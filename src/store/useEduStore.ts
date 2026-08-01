@@ -7,18 +7,21 @@ import {
   Stats,
   District,
   Direction,
+  Feedback,
 } from "@/types";
 import {
   initialCenters,
   initialCourses,
   initialTeachers,
   initialStats,
+  initialFeedbacks,
 } from "@/data/mockData";
 
 interface EduState {
   centers: LearningCenter[];
   courses: Course[];
   teachers: Teacher[];
+  feedbacks: Feedback[];
   stats: Stats;
 
   // Theme State
@@ -42,10 +45,17 @@ interface EduState {
   setSelectedDirection: (direction: Direction | "Barchasi") => void;
   resetFilters: () => void;
 
-  // Actions - Tracking
+  // Actions - Tracking & Visitors
   trackSearch: (query: string) => void;
   incrementCenterView: (centerId: string) => void;
   trackDirectionView: (direction: string) => void;
+  incrementTotalVisitors: () => void;
+
+  // Actions - Feedback & Rating
+  addFeedback: (
+    feedback: Omit<Feedback, "id" | "createdAt">
+  ) => void;
+  deleteFeedback: (id: string) => void;
 
   // Actions - Admin Auth
   login: (username: string, pass: string) => boolean;
@@ -75,6 +85,7 @@ export const useEduStore = create<EduState>()(
       centers: initialCenters,
       courses: initialCourses,
       teachers: initialTeachers,
+      feedbacks: initialFeedbacks,
       stats: initialStats,
 
       theme: "light",
@@ -193,6 +204,77 @@ export const useEduStore = create<EduState>()(
         });
       },
 
+      incrementTotalVisitors: () => {
+        set((state) => ({
+          stats: {
+            ...state.stats,
+            totalVisitors: (state.stats.totalVisitors || 0) + 1,
+          },
+        }));
+      },
+
+      // Feedback & Rating Recalculation
+      addFeedback: (fbData) => {
+        const newFb: Feedback = {
+          ...fbData,
+          id: "fb-" + Date.now(),
+          createdAt: new Date().toISOString().split("T")[0],
+        };
+
+        set((state) => {
+          const newFeedbacks = [newFb, ...state.feedbacks];
+
+          // Recalculate average rating for the target center
+          const centerFeedbacks = newFeedbacks.filter(
+            (f) => f.centerId === fbData.centerId
+          );
+
+          let newAvgRating = 4.8;
+          if (centerFeedbacks.length > 0) {
+            const sum = centerFeedbacks.reduce((acc, f) => acc + f.rating, 0);
+            newAvgRating = parseFloat((sum / centerFeedbacks.length).toFixed(1));
+          }
+
+          const updatedCenters = state.centers.map((c) =>
+            c.id === fbData.centerId ? { ...c, rating: newAvgRating } : c
+          );
+
+          return {
+            feedbacks: newFeedbacks,
+            centers: updatedCenters,
+          };
+        });
+      },
+
+      deleteFeedback: (id) => {
+        set((state) => {
+          const targetFb = state.feedbacks.find((f) => f.id === id);
+          const newFeedbacks = state.feedbacks.filter((f) => f.id !== id);
+
+          if (!targetFb) return { feedbacks: newFeedbacks };
+
+          // Recalculate rating
+          const centerFeedbacks = newFeedbacks.filter(
+            (f) => f.centerId === targetFb.centerId
+          );
+
+          let newAvgRating = 4.8;
+          if (centerFeedbacks.length > 0) {
+            const sum = centerFeedbacks.reduce((acc, f) => acc + f.rating, 0);
+            newAvgRating = parseFloat((sum / centerFeedbacks.length).toFixed(1));
+          }
+
+          const updatedCenters = state.centers.map((c) =>
+            c.id === targetFb.centerId ? { ...c, rating: newAvgRating } : c
+          );
+
+          return {
+            feedbacks: newFeedbacks,
+            centers: updatedCenters,
+          };
+        });
+      },
+
       login: (username, password) => {
         if (username === "admin" && password === "1234") {
           set({ isAdminLoggedIn: true });
@@ -227,6 +309,7 @@ export const useEduStore = create<EduState>()(
           centers: state.centers.filter((c) => c.id !== id),
           courses: state.courses.filter((c) => c.centerId !== id),
           teachers: state.teachers.filter((t) => t.centerId !== id),
+          feedbacks: state.feedbacks.filter((f) => f.centerId !== id),
         }));
       },
 

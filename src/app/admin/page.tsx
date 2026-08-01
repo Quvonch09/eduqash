@@ -12,12 +12,15 @@ import {
   ArrowRight,
   TrendingUp,
   Sparkles,
+  MessageSquare,
+  Globe,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const centers = useEduStore((state) => state.centers);
   const courses = useEduStore((state) => state.courses);
   const teachers = useEduStore((state) => state.teachers);
+  const feedbacks = useEduStore((state) => state.feedbacks);
   const stats = useEduStore((state) => state.stats);
 
   const totalSearches = stats.searchLogs.reduce(
@@ -26,6 +29,7 @@ export default function AdminDashboardPage() {
   );
 
   const totalViews = centers.reduce((acc, c) => acc + c.viewsCount, 0);
+  const totalVisitors = stats.totalVisitors || 1420;
 
   return (
     <div className="space-y-8">
@@ -44,13 +48,30 @@ export default function AdminDashboardPage() {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              Sayt Tashrifchilari
+            </span>
+            <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+              {totalVisitors}
+            </span>
+            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 inline-flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" /> Real vaqtdagi tashriflar
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <Globe className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+          <div>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
               O'quv Markazlar
             </span>
             <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
               {centers.length}
             </span>
-            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 inline-flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> Qashqadaryo bo'ylab
+            <span className="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-1 inline-block">
+              Qashqadaryo tumanlarida
             </span>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
@@ -61,34 +82,17 @@ export default function AdminDashboardPage() {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              Jami Kurslar
+              Fikr-mulohazalar
             </span>
             <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {courses.length}
-            </span>
-            <span className="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-1 inline-block">
-              10+ yo'nalishlar
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <BookOpen className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
-          <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              Malakali Ustozlar
-            </span>
-            <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {teachers.length}
+              {feedbacks.length}
             </span>
             <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1 inline-block">
-              Tajribali mutaxassislar
+              Foydalanuvchilar izohlari
             </span>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-            <Users className="w-6 h-6" />
+            <MessageSquare className="w-6 h-6" />
           </div>
         </div>
 
@@ -130,10 +134,10 @@ export default function AdminDashboardPage() {
             <Plus className="w-4 h-4" /> Markaz qo'shish
           </Link>
           <Link
-            href="/admin/courses"
+            href="/admin/feedbacks"
             className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition border border-white/20"
           >
-            <Plus className="w-4 h-4" /> Kurs qo'shish
+            <MessageSquare className="w-4 h-4" /> Izohlarni ko'rish
           </Link>
           <Link
             href="/admin/statistics"
