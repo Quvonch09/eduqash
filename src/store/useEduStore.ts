@@ -276,7 +276,7 @@ export const useEduStore = create<EduState>()(
       },
 
       login: (username, password) => {
-        if (username === "admin" && password === "1234") {
+        if (username === "admin" && password === "fazliddin2580") {
           set({ isAdminLoggedIn: true });
           return true;
         }

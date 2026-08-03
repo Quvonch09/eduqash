@@ -133,8 +133,43 @@ export default function LandingPage() {
 
   const totalVisitors = stats.totalVisitors || 1420;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://eduqash.uz/#website",
+        "url": "https://eduqash.uz",
+        "name": "Eduqash.uz — Qashqadaryo O'quv Markazlari Qidiruv Platformasi",
+        "description": "Qashqadaryo viloyati o'quv markazlari, IT, IELTS va maktab fanlari kurslari qidiruv xizmati.",
+        "inLanguage": "uz-UZ",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://eduqash.uz/?q={search_term_string}",
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@type": "EducationalOrganization",
+        "@id": "https://eduqash.uz/#organization",
+        "name": "Eduqash Platformasi",
+        "url": "https://eduqash.uz",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Qarshi",
+          "addressRegion": "Qashqadaryo",
+          "addressCountry": "UZ",
+        },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-brand-500 selection:text-white transition-colors duration-200">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
 
       {/* Hero Section */}
