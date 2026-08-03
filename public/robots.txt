@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /*?center=
+
+Sitemap: https://eduqash.uz/sitemap.xml

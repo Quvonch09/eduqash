@@ -6,12 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/login", "/admin/"],
-      },
-      {
-        userAgent: "Googlebot",
-        allow: "/",
-        disallow: ["/admin/login", "/admin/"],
+        disallow: ["/admin", "/admin/*", "/*?center="],
       },
     ],
     sitemap: "https://eduqash.uz/sitemap.xml",
