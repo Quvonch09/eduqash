@@ -98,10 +98,6 @@ export const useEduStore = create<EduState>()(
       stats: initialStats,
       admins: initialAdmins,
       currentAdmin: null,
-      courses: initialCourses,
-      teachers: initialTeachers,
-      feedbacks: initialFeedbacks,
-      stats: initialStats,
 
       theme: "light",
       toggleTheme: () => {
