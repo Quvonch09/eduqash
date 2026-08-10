@@ -14,6 +14,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const isAdminLoggedIn = useEduStore((state) => state.isAdminLoggedIn);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
   const theme = useEduStore((state) => state.theme);
   const toggleTheme = useEduStore((state) => state.toggleTheme);
   const [isClient, setIsClient] = useState(false);
@@ -92,15 +93,26 @@ export default function AdminLayout({
             </button>
 
             <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-700">
-              <div className="w-8 h-8 rounded-full bg-brand-600 text-white font-bold flex items-center justify-center text-xs shadow-sm">
-                A
+              <div className={`w-8 h-8 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-sm ${
+                currentAdmin?.role === "super_admin" ? "bg-amber-600" : "bg-brand-600"
+              }`}>
+                {currentAdmin?.name ? currentAdmin.name.charAt(0).toUpperCase() : "A"}
               </div>
               <div className="hidden sm:block">
-                <span className="text-xs font-bold text-slate-900 dark:text-white block leading-tight">
-                  Administrator
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white block leading-tight">
+                    {currentAdmin?.name || "Administrator"}
+                  </span>
+                  <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full ${
+                    currentAdmin?.role === "super_admin"
+                      ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                      : "bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30"
+                  }`}>
+                    {currentAdmin?.role === "super_admin" ? "Super Admin" : "Admin"}
+                  </span>
+                </div>
                 <span className="text-[10px] font-medium text-slate-400">
-                  superadmin@eduqash.uz
+                  @{currentAdmin?.username || "admin"}
                 </span>
               </div>
             </div>

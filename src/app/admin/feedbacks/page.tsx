@@ -15,7 +15,14 @@ import {
 export default function AdminFeedbacksPage() {
   const feedbacks = useEduStore((state) => state.feedbacks);
   const centers = useEduStore((state) => state.centers);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
   const deleteFeedback = useEduStore((state) => state.deleteFeedback);
+
+  const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const allowedCenters = isSuperAdmin
+    ? centers
+    : centers.filter((c) => c.createdBy === currentAdmin.id);
+  const allowedCenterIds = allowedCenters.map((c) => c.id);
 
   const [search, setSearch] = useState("");
   const [selectedCenterId, setSelectedCenterId] = useState<string>("Barchasi");
@@ -30,7 +37,11 @@ export default function AdminFeedbacksPage() {
     }
   };
 
-  const filteredFeedbacks = feedbacks.filter((fb) => {
+  const userFeedbacks = isSuperAdmin
+    ? feedbacks
+    : feedbacks.filter((fb) => allowedCenterIds.includes(fb.centerId));
+
+  const filteredFeedbacks = userFeedbacks.filter((fb) => {
     const matchesCenter =
       selectedCenterId === "Barchasi" || fb.centerId === selectedCenterId;
     const matchesSearch =
@@ -69,7 +80,7 @@ export default function AdminFeedbacksPage() {
           className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none w-full sm:w-auto"
         >
           <option value="Barchasi">Barcha markazlar</option>
-          {centers.map((center) => (
+          {allowedCenters.map((center) => (
             <option key={center.id} value={center.id}>
               {center.name}
             </option>

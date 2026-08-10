@@ -31,6 +31,7 @@ export interface LearningCenter {
   lat: number;
   lng: number;
   createdAt: string;
+  createdBy?: string;
 }
 
 export interface Course {
@@ -89,4 +90,15 @@ export interface Stats {
   centerViews: CenterViewLog[];
   directionViews: DirectionViewLog[];
   totalVisitors: number;
+}
+
+export type AdminRole = "super_admin" | "admin";
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  password?: string;
+  name: string;
+  role: AdminRole;
+  createdAt: string;
 }

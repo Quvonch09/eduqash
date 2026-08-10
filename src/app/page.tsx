@@ -89,36 +89,44 @@ export default function LandingPage() {
     }
   }, [incrementTotalVisitors]);
 
+  // Pre-calculate courses text per center for lightning-fast search lookup
+  const coursesByCenterMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (let i = 0; i < courses.length; i++) {
+      const c = courses[i];
+      const existing = map.get(c.centerId) || [];
+      existing.push(`${c.name.toLowerCase()} ${c.direction.toLowerCase()} ${c.level.toLowerCase()}`);
+      map.set(c.centerId, existing);
+    }
+    return map;
+  }, [courses]);
+
   // Real-time filtering based on searchQuery, district & course directions
   const filteredCenters = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+
     return centers.filter((center) => {
-      // District match
       const matchesDistrict =
         selectedDistrict === "Barchasi" || center.district === selectedDistrict;
 
       if (!matchesDistrict) return false;
+      if (!q) return true;
 
-      if (!searchQuery.trim()) return true;
-
-      const q = searchQuery.toLowerCase().trim();
-
-      // Check center name, address, description
       const nameMatch = center.name.toLowerCase().includes(q);
       const addressMatch = center.address.toLowerCase().includes(q);
       const districtMatch = center.district.toLowerCase().includes(q);
+      if (nameMatch || addressMatch || districtMatch) return true;
 
-      // Check if any associated course matches direction or name
-      const centerCourses = courses.filter((c) => c.centerId === center.id);
-      const courseMatch = centerCourses.some(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.direction.toLowerCase().includes(q) ||
-          c.level.toLowerCase().includes(q)
-      );
+      const centerCoursesText = coursesByCenterMap.get(center.id);
+      if (centerCoursesText) {
+        for (let i = 0; i < centerCoursesText.length; i++) {
+          if (centerCoursesText[i].includes(q)) return true;
+        }
+      }
 
-      return nameMatch || addressMatch || districtMatch || courseMatch;
+      return false;
     });
-  }, [centers, courses, searchQuery, selectedDistrict]);
+  }, [centers, coursesByCenterMap, searchQuery, selectedDistrict]);
 
   const handleSelectCenter = (center: LearningCenter) => {
     incrementCenterView(center.id);

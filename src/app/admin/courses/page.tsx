@@ -41,9 +41,16 @@ export default function AdminCoursesPage() {
   const courses = useEduStore((state) => state.courses);
   const centers = useEduStore((state) => state.centers);
   const teachers = useEduStore((state) => state.teachers);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
   const addCourse = useEduStore((state) => state.addCourse);
   const updateCourse = useEduStore((state) => state.updateCourse);
   const deleteCourse = useEduStore((state) => state.deleteCourse);
+
+  const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const allowedCenters = isSuperAdmin
+    ? centers
+    : centers.filter((c) => c.createdBy === currentAdmin.id);
+  const allowedCenterIds = allowedCenters.map((c) => c.id);
 
   const [search, setSearch] = useState("");
   const [selectedCenterId, setSelectedCenterId] = useState<string>("Barchasi");
@@ -52,7 +59,7 @@ export default function AdminCoursesPage() {
 
   const [formData, setFormData] = useState({
     name: "",
-    centerId: centers[0]?.id || "",
+    centerId: allowedCenters[0]?.id || "",
     direction: "IT" as Direction,
     price: 500000,
     duration: "6 oy",
@@ -65,7 +72,7 @@ export default function AdminCoursesPage() {
     setEditingCourse(null);
     setFormData({
       name: "",
-      centerId: centers[0]?.id || "",
+      centerId: allowedCenters[0]?.id || "",
       direction: "IT",
       price: 500000,
       duration: "6 oy",
@@ -107,7 +114,11 @@ export default function AdminCoursesPage() {
     }
   };
 
-  const filteredCourses = courses.filter((c) => {
+  const userCourses = isSuperAdmin
+    ? courses
+    : courses.filter((c) => allowedCenterIds.includes(c.centerId));
+
+  const filteredCourses = userCourses.filter((c) => {
     const matchesCenter =
       selectedCenterId === "Barchasi" || c.centerId === selectedCenterId;
     const matchesSearch =
@@ -163,7 +174,7 @@ export default function AdminCoursesPage() {
           className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none w-full sm:w-auto"
         >
           <option value="Barchasi">Barcha markazlar</option>
-          {centers.map((center) => (
+          {allowedCenters.map((center) => (
             <option key={center.id} value={center.id}>
               {center.name}
             </option>
@@ -291,7 +302,7 @@ export default function AdminCoursesPage() {
                       }
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none"
                     >
-                      {centers.map((c) => (
+                      {allowedCenters.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name} ({c.district})
                         </option>

@@ -14,17 +14,21 @@ import {
   GraduationCap,
   ChevronRight,
   ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useEduStore((state) => state.logout);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
 
   const handleLogout = () => {
     logout();
     router.push("/admin/login");
   };
+
+  const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
 
   const navItems = [
     {
@@ -57,6 +61,15 @@ export default function AdminSidebar() {
       href: "/admin/statistics",
       icon: BarChart3,
     },
+    ...(isSuperAdmin
+      ? [
+          {
+            name: "Adminlar",
+            href: "/admin/admins",
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
   ];
 
   return (

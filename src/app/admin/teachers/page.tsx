@@ -23,9 +23,16 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function AdminTeachersPage() {
   const teachers = useEduStore((state) => state.teachers);
   const centers = useEduStore((state) => state.centers);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
   const addTeacher = useEduStore((state) => state.addTeacher);
   const updateTeacher = useEduStore((state) => state.updateTeacher);
   const deleteTeacher = useEduStore((state) => state.deleteTeacher);
+
+  const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const allowedCenters = isSuperAdmin
+    ? centers
+    : centers.filter((c) => c.createdBy === currentAdmin.id);
+  const allowedCenterIds = allowedCenters.map((c) => c.id);
 
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +44,7 @@ export default function AdminTeachersPage() {
     bio: "",
     experience: "3 yil",
     resultsText: "100+ shogirdlar",
-    centerId: centers[0]?.id || "",
+    centerId: allowedCenters[0]?.id || "",
     phone: "+998 ",
     telegram: "@",
     instagram: "",
@@ -51,7 +58,7 @@ export default function AdminTeachersPage() {
       bio: "",
       experience: "3 yil",
       resultsText: "100+ shogirdlar, OTM talabalari",
-      centerId: centers[0]?.id || "",
+      centerId: allowedCenters[0]?.id || "",
       phone: "+998 ",
       telegram: "@",
       instagram: "",
@@ -122,7 +129,11 @@ export default function AdminTeachersPage() {
     }
   };
 
-  const filteredTeachers = teachers.filter((t) =>
+  const userTeachers = isSuperAdmin
+    ? teachers
+    : teachers.filter((t) => allowedCenterIds.includes(t.centerId));
+
+  const filteredTeachers = userTeachers.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -297,7 +308,7 @@ export default function AdminTeachersPage() {
                       }
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold focus:outline-none"
                     >
-                      {centers.map((c) => (
+                      {allowedCenters.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>

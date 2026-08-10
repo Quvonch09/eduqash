@@ -26,9 +26,12 @@ const DISTRICTS: District[] = [
 
 export default function AdminCentersPage() {
   const centers = useEduStore((state) => state.centers);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
   const addCenter = useEduStore((state) => state.addCenter);
   const updateCenter = useEduStore((state) => state.updateCenter);
   const deleteCenter = useEduStore((state) => state.deleteCenter);
+
+  const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
 
   const [search, setSearch] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("Barchasi");
@@ -109,7 +112,11 @@ export default function AdminCentersPage() {
     }
   };
 
-  const filteredCenters = centers.filter((c) => {
+  const userCenters = isSuperAdmin
+    ? centers
+    : centers.filter((c) => c.createdBy === currentAdmin.id);
+
+  const filteredCenters = userCenters.filter((c) => {
     const matchesDistrict =
       selectedDistrict === "Barchasi" || c.district === selectedDistrict;
     const matchesSearch =

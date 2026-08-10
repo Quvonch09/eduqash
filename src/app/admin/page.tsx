@@ -22,13 +22,34 @@ export default function AdminDashboardPage() {
   const teachers = useEduStore((state) => state.teachers);
   const feedbacks = useEduStore((state) => state.feedbacks);
   const stats = useEduStore((state) => state.stats);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
+
+  const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+
+  const userCenters = isSuperAdmin
+    ? centers
+    : centers.filter((c) => c.createdBy === currentAdmin.id);
+
+  const allowedCenterIds = userCenters.map((c) => c.id);
+
+  const userCourses = isSuperAdmin
+    ? courses
+    : courses.filter((c) => allowedCenterIds.includes(c.centerId));
+
+  const userTeachers = isSuperAdmin
+    ? teachers
+    : teachers.filter((t) => allowedCenterIds.includes(t.centerId));
+
+  const userFeedbacks = isSuperAdmin
+    ? feedbacks
+    : feedbacks.filter((f) => allowedCenterIds.includes(f.centerId));
 
   const totalSearches = stats.searchLogs.reduce(
     (acc, item) => acc + item.count,
     0
   );
 
-  const totalViews = centers.reduce((acc, c) => acc + c.viewsCount, 0);
+  const totalViews = userCenters.reduce((acc, c) => acc + c.viewsCount, 0);
   const totalVisitors = stats.totalVisitors || 1420;
 
   return (
@@ -68,10 +89,10 @@ export default function AdminDashboardPage() {
               O'quv Markazlar
             </span>
             <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {centers.length}
+              {userCenters.length}
             </span>
             <span className="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-1 inline-block">
-              Qashqadaryo tumanlarida
+              {isSuperAdmin ? "Qashqadaryo tumanlarida" : "Sizning markazlaringiz"}
             </span>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
@@ -85,7 +106,7 @@ export default function AdminDashboardPage() {
               Fikr-mulohazalar
             </span>
             <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {feedbacks.length}
+              {userFeedbacks.length}
             </span>
             <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1 inline-block">
               Foydalanuvchilar izohlari
@@ -181,7 +202,7 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300">
-              {centers.slice(0, 5).map((center) => (
+              {userCenters.slice(0, 5).map((center) => (
                 <tr key={center.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                   <td className="py-4 px-6 flex items-center gap-3 font-bold text-slate-900 dark:text-white">
                     <img

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { LearningCenter } from "@/types";
 import { useEduStore } from "@/store/useEduStore";
 import { motion } from "framer-motion";
@@ -10,9 +11,10 @@ interface CenterCardProps {
   onSelect: (center: LearningCenter) => void;
 }
 
-export default function CenterCard({ center, onSelect }: CenterCardProps) {
-  const courses = useEduStore((state) => state.courses);
-  const centerCourses = courses.filter((c) => c.centerId === center.id);
+const CenterCard = memo(function CenterCard({ center, onSelect }: CenterCardProps) {
+  const coursesCount = useEduStore(
+    (state) => state.courses.filter((c) => c.centerId === center.id).length
+  );
 
   return (
     <motion.div
@@ -69,7 +71,7 @@ export default function CenterCard({ center, onSelect }: CenterCardProps) {
         <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-1 rounded-lg">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Kurslar soni: {centerCourses.length} ta</span>
+            <span>Kurslar soni: {coursesCount} ta</span>
           </div>
           <div className="flex items-center text-xs font-bold text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform">
             <span>Batafsil</span>
@@ -79,4 +81,6 @@ export default function CenterCard({ center, onSelect }: CenterCardProps) {
       </div>
     </motion.div>
   );
-}
+});
+
+export default CenterCard;

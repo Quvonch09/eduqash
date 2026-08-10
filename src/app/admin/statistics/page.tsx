@@ -34,6 +34,15 @@ export default function AdminStatisticsPage() {
   const courses = useEduStore((state) => state.courses);
   const feedbacks = useEduStore((state) => state.feedbacks);
   const stats = useEduStore((state) => state.stats);
+  const currentAdmin = useEduStore((state) => state.currentAdmin);
+
+  const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+
+  const userCenters = useMemo(() => {
+    return isSuperAdmin
+      ? centers
+      : centers.filter((c) => c.createdBy === currentAdmin.id);
+  }, [centers, isSuperAdmin, currentAdmin]);
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -61,7 +70,7 @@ export default function AdminStatisticsPage() {
   // Centers distribution by district (Pie Chart)
   const districtDistributionData = useMemo(() => {
     const counts: Record<string, number> = {};
-    centers.forEach((c) => {
+    userCenters.forEach((c) => {
       counts[c.district] = (counts[c.district] || 0) + 1;
     });
 
@@ -69,13 +78,13 @@ export default function AdminStatisticsPage() {
       name: district,
       value: counts[district],
     }));
-  }, [centers]);
+  }, [userCenters]);
 
   // Top 5 Most Viewed Centers
   const topViewedCenters = useMemo(() => {
-    const sorted = [...centers].sort((a, b) => b.viewsCount - a.viewsCount);
+    const sorted = [...userCenters].sort((a, b) => b.viewsCount - a.viewsCount);
     return sorted.slice(0, 5);
-  }, [centers]);
+  }, [userCenters]);
 
   const totalVisitors = stats.totalVisitors || 1420;
 

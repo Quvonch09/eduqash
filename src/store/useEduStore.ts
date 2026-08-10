@@ -8,6 +8,7 @@ import {
   District,
   Direction,
   Feedback,
+  AdminUser,
 } from "@/types";
 import {
   initialCenters,
@@ -15,6 +16,7 @@ import {
   initialTeachers,
   initialStats,
   initialFeedbacks,
+  initialAdmins,
 } from "@/data/mockData";
 
 interface EduState {
@@ -23,6 +25,8 @@ interface EduState {
   teachers: Teacher[];
   feedbacks: Feedback[];
   stats: Stats;
+  admins: AdminUser[];
+  currentAdmin: AdminUser | null;
 
   // Theme State
   theme: "light" | "dark";
@@ -57,9 +61,14 @@ interface EduState {
   ) => void;
   deleteFeedback: (id: string) => void;
 
-  // Actions - Admin Auth
+  // Actions - Admin Auth & Roles
   login: (username: string, pass: string) => boolean;
   logout: () => void;
+
+  // Actions - CRUD Admins
+  addAdmin: (admin: Omit<AdminUser, "id" | "createdAt">) => void;
+  updateAdmin: (id: string, data: Partial<AdminUser>) => void;
+  deleteAdmin: (id: string) => void;
 
   // Actions - CRUD Centers
   addCenter: (
@@ -87,6 +96,12 @@ export const useEduStore = create<EduState>()(
       teachers: initialTeachers,
       feedbacks: initialFeedbacks,
       stats: initialStats,
+      admins: initialAdmins,
+      currentAdmin: null,
+      courses: initialCourses,
+      teachers: initialTeachers,
+      feedbacks: initialFeedbacks,
+      stats: initialStats,
 
       theme: "light",
       toggleTheme: () => {
@@ -101,12 +116,7 @@ export const useEduStore = create<EduState>()(
 
       isAdminLoggedIn: false,
 
-      setSearchQuery: (query) => {
-        set({ searchQuery: query });
-        if (query.trim().length > 1) {
-          get().trackSearch(query.trim());
-        }
-      },
+      setSearchQuery: (query) => set({ searchQuery: query }),
 
       setSelectedDistrict: (district) => set({ selectedDistrict: district }),
       setSelectedDirection: (direction) => {
@@ -276,20 +286,79 @@ export const useEduStore = create<EduState>()(
       },
 
       login: (username, password) => {
-        if (username === "admin" && password === "fazliddin2580") {
-          set({ isAdminLoggedIn: true });
+        const cleanUser = username.trim().toLowerCase();
+        const foundAdmin = get().admins.find(
+          (a) => a.username.toLowerCase() === cleanUser && a.password === password
+        );
+
+        if (foundAdmin) {
+          set({ currentAdmin: foundAdmin, isAdminLoggedIn: true });
           return true;
         }
+
+        // Fallback for default superadmin / admin credentials if not matched in list
+        if ((cleanUser === "admin" || cleanUser === "superadmin") && password === "fazliddin2580") {
+          const defaultSuperAdmin: AdminUser = {
+            id: "admin-super-1",
+            username: username,
+            name: "Fazliddin Qodirov (Super Admin)",
+            role: "super_admin",
+            createdAt: "2024-01-01",
+          };
+          set({ currentAdmin: defaultSuperAdmin, isAdminLoggedIn: true });
+          return true;
+        }
+
+        if (cleanUser === "center_admin" && password === "admin123") {
+          const defaultAdmin: AdminUser = {
+            id: "admin-center-1",
+            username: "center_admin",
+            name: "Jasur Rahimov (Markaz Admini)",
+            role: "admin",
+            createdAt: "2024-02-15",
+          };
+          set({ currentAdmin: defaultAdmin, isAdminLoggedIn: true });
+          return true;
+        }
+
         return false;
       },
 
-      logout: () => set({ isAdminLoggedIn: false }),
+      logout: () => set({ currentAdmin: null, isAdminLoggedIn: false }),
+
+      // CRUD Admins
+      addAdmin: (adminData) => {
+        const newAdmin: AdminUser = {
+          ...adminData,
+          id: "admin-" + Date.now(),
+          createdAt: new Date().toISOString().split("T")[0],
+        };
+        set((state) => ({ admins: [newAdmin, ...state.admins] }));
+      },
+
+      updateAdmin: (id, data) => {
+        set((state) => ({
+          admins: state.admins.map((a) => (a.id === id ? { ...a, ...data } : a)),
+          currentAdmin:
+            state.currentAdmin?.id === id
+              ? { ...state.currentAdmin, ...data }
+              : state.currentAdmin,
+        }));
+      },
+
+      deleteAdmin: (id) => {
+        set((state) => ({
+          admins: state.admins.filter((a) => a.id !== id),
+        }));
+      },
 
       // CRUD Operations
       addCenter: (centerData) => {
+        const currentAdmin = get().currentAdmin;
         const newCenter: LearningCenter = {
           ...centerData,
           id: "center-" + Date.now(),
+          createdBy: currentAdmin?.id || "admin-super-1",
           viewsCount: 0,
           createdAt: new Date().toISOString().split("T")[0],
         };

@@ -1,4 +1,4 @@
-import { LearningCenter, Course, Teacher, Stats, Feedback } from "@/types";
+import { LearningCenter, Course, Teacher, Stats, Feedback, AdminUser } from "@/types";
 
 export const initialCenters: LearningCenter[] = [
   {
@@ -14,6 +14,7 @@ export const initialCenters: LearningCenter[] = [
     lat: 38.865,
     lng: 65.792,
     createdAt: "2024-01-15",
+    createdBy: "admin-center-1",
   },
   {
     id: "center-2",
@@ -28,6 +29,7 @@ export const initialCenters: LearningCenter[] = [
     lat: 38.857,
     lng: 65.785,
     createdAt: "2024-02-01",
+    createdBy: "admin-center-1",
   },
   {
     id: "center-3",
@@ -357,3 +359,38 @@ export const initialStats: Stats = {
   ],
   totalVisitors: 1420,
 };
+
+export const initialAdmins: AdminUser[] = [
+  {
+    id: "admin-super-1",
+    username: "superadmin",
+    password: "fazliddin2580",
+    name: "Fazliddin Qodirov",
+    role: "super_admin",
+    createdAt: "2024-01-01",
+  },
+  {
+    id: "admin-super-alias",
+    username: "admin",
+    password: "fazliddin2580",
+    name: "Fazliddin Qodirov (Admin)",
+    role: "super_admin",
+    createdAt: "2024-01-01",
+  },
+  {
+    id: "admin-center-1",
+    username: "center_admin",
+    password: "admin123",
+    name: "Jasur Rahimov",
+    role: "admin",
+    createdAt: "2024-02-15",
+  },
+  {
+    id: "admin-center-2",
+    username: "sfera_admin",
+    password: "sfera2024",
+    name: "Sardor Olimov",
+    role: "admin",
+    createdAt: "2024-03-10",
+  },
+];
