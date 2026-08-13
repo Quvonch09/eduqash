@@ -18,6 +18,7 @@ import {
   initialFeedbacks,
   initialAdmins,
 } from "@/data/mockData";
+import { supabase } from "@/lib/supabaseClient";
 
 interface EduState {
   centers: LearningCenter[];
@@ -50,42 +51,45 @@ interface EduState {
   resetFilters: () => void;
 
   // Actions - Tracking & Visitors
-  trackSearch: (query: string) => void;
-  incrementCenterView: (centerId: string) => void;
-  trackDirectionView: (direction: string) => void;
-  incrementTotalVisitors: () => void;
+  trackSearch: (query: string) => Promise<void>;
+  incrementCenterView: (centerId: string) => Promise<void>;
+  trackDirectionView: (direction: string) => Promise<void>;
+  incrementTotalVisitors: () => Promise<void>;
 
   // Actions - Feedback & Rating
   addFeedback: (
     feedback: Omit<Feedback, "id" | "createdAt">
-  ) => void;
-  deleteFeedback: (id: string) => void;
+  ) => Promise<void>;
+  deleteFeedback: (id: string) => Promise<void>;
 
   // Actions - Admin Auth & Roles
-  login: (username: string, pass: string) => boolean;
+  login: (username: string, pass: string) => Promise<boolean>;
   logout: () => void;
 
   // Actions - CRUD Admins
-  addAdmin: (admin: Omit<AdminUser, "id" | "createdAt">) => void;
-  updateAdmin: (id: string, data: Partial<AdminUser>) => void;
-  deleteAdmin: (id: string) => void;
+  addAdmin: (admin: Omit<AdminUser, "id" | "createdAt">) => Promise<void>;
+  updateAdmin: (id: string, data: Partial<AdminUser>) => Promise<void>;
+  deleteAdmin: (id: string) => Promise<void>;
 
   // Actions - CRUD Centers
   addCenter: (
     center: Omit<LearningCenter, "id" | "viewsCount" | "createdAt">
-  ) => void;
-  updateCenter: (id: string, data: Partial<LearningCenter>) => void;
-  deleteCenter: (id: string) => void;
+  ) => Promise<void>;
+  updateCenter: (id: string, data: Partial<LearningCenter>) => Promise<void>;
+  deleteCenter: (id: string) => Promise<void>;
 
   // Actions - CRUD Courses
-  addCourse: (course: Omit<Course, "id">) => void;
-  updateCourse: (id: string, data: Partial<Course>) => void;
-  deleteCourse: (id: string) => void;
+  addCourse: (course: Omit<Course, "id">) => Promise<void>;
+  updateCourse: (id: string, data: Partial<Course>) => Promise<void>;
+  deleteCourse: (id: string) => Promise<void>;
 
   // Actions - CRUD Teachers
-  addTeacher: (teacher: Omit<Teacher, "id">) => void;
-  updateTeacher: (id: string, data: Partial<Teacher>) => void;
-  deleteTeacher: (id: string) => void;
+  addTeacher: (teacher: Omit<Teacher, "id">) => Promise<void>;
+  updateTeacher: (id: string, data: Partial<Teacher>) => Promise<void>;
+  deleteTeacher: (id: string) => Promise<void>;
+
+  // Actions - Fetch Data from Supabase
+  fetchData: () => Promise<void>;
 }
 
 export const useEduStore = create<EduState>()(
@@ -129,9 +133,118 @@ export const useEduStore = create<EduState>()(
           selectedDirection: "Barchasi",
         }),
 
-      trackSearch: (query) => {
+      fetchData: async () => {
+        try {
+          const [
+            { data: centers },
+            { data: courses },
+            { data: teachers },
+            { data: feedbacks },
+            { data: admins },
+            { data: searchLogs },
+            { data: centerViews },
+            { data: directionViews },
+            { data: statsGeneral },
+          ] = await Promise.all([
+            supabase.from("learning_centers").select("*"),
+            supabase.from("courses").select("*"),
+            supabase.from("teachers").select("*"),
+            supabase.from("feedbacks").select("*"),
+            supabase.from("admins").select("*"),
+            supabase.from("search_logs").select("*"),
+            supabase.from("center_views").select("*"),
+            supabase.from("direction_views").select("*"),
+            supabase.from("stats_general").select("*"),
+          ]);
+
+          const totalVisitorsLog = statsGeneral?.find(
+            (s) => s.key === "total_visitors"
+          );
+
+          set({
+            centers: (centers || []).map((c) => ({
+              id: c.id,
+              name: c.name,
+              address: c.address,
+              district: c.district as District,
+              phone: c.phone,
+              image: c.image,
+              description: c.description,
+              rating: Number(c.rating),
+              viewsCount: c.views_count || 0,
+              lat: c.lat,
+              lng: c.lng,
+              createdAt: c.created_at,
+              createdBy: c.created_by,
+            })),
+            courses: (courses || []).map((c) => ({
+              id: c.id,
+              centerId: c.center_id,
+              direction: c.direction as Direction,
+              name: c.name,
+              price: Number(c.price),
+              duration: c.duration,
+              teacherId: c.teacher_id,
+              description: c.description,
+              level: c.level as any,
+            })),
+            teachers: (teachers || []).map((t) => ({
+              id: t.id,
+              centerId: t.center_id,
+              name: t.name,
+              photo: t.photo,
+              bio: t.bio,
+              experience: t.experience,
+              results: t.results || [],
+              contact: {
+                phone: t.phone,
+                telegram: t.telegram,
+                instagram: t.instagram,
+              },
+            })),
+            feedbacks: (feedbacks || []).map((f) => ({
+              id: f.id,
+              centerId: f.center_id,
+              userName: f.user_name,
+              rating: f.rating,
+              comment: f.comment,
+              createdAt: f.created_at,
+            })),
+            admins: (admins || []).map((a) => ({
+              id: a.id,
+              username: a.username,
+              password: a.password,
+              name: a.name,
+              role: a.role as any,
+              createdAt: a.created_at,
+            })),
+            stats: {
+              searchLogs: (searchLogs || []).map((s) => ({
+                query: s.query,
+                count: s.count || 0,
+              })),
+              centerViews: (centerViews || []).map((c) => ({
+                centerId: c.center_id,
+                count: c.count || 0,
+              })),
+              directionViews: (directionViews || []).map((d) => ({
+                direction: d.direction,
+                count: d.count || 0,
+              })),
+              totalVisitors: totalVisitorsLog ? totalVisitorsLog.value : 1420,
+            },
+          });
+        } catch (error) {
+          console.error("Error fetching data from Supabase:", error);
+        }
+      },
+
+      trackSearch: async (query) => {
+        const cleanQuery = query.trim();
+        if (!cleanQuery) return;
+
         set((state) => {
-          const lower = query.toLowerCase();
+          const lower = cleanQuery.toLowerCase();
           const existingIndex = state.stats.searchLogs.findIndex(
             (log) => log.query.toLowerCase() === lower
           );
@@ -143,7 +256,7 @@ export const useEduStore = create<EduState>()(
               count: updatedLogs[existingIndex].count + 1,
             };
           } else {
-            updatedLogs.push({ query, count: 1 });
+            updatedLogs.push({ query: cleanQuery, count: 1 });
           }
 
           return {
@@ -153,9 +266,30 @@ export const useEduStore = create<EduState>()(
             },
           };
         });
+
+        try {
+          const { data: log } = await supabase
+            .from("search_logs")
+            .select("count")
+            .eq("query", cleanQuery)
+            .maybeSingle();
+
+          if (log) {
+            await supabase
+              .from("search_logs")
+              .update({ count: log.count + 1 })
+              .eq("query", cleanQuery);
+          } else {
+            await supabase
+              .from("search_logs")
+              .insert({ query: cleanQuery, count: 1 });
+          }
+        } catch (error) {
+          console.error("Error tracking search in Supabase:", error);
+        }
       },
 
-      incrementCenterView: (centerId) => {
+      incrementCenterView: async (centerId) => {
         set((state) => {
           const updatedCenters = state.centers.map((c) =>
             c.id === centerId ? { ...c, viewsCount: c.viewsCount + 1 } : c
@@ -183,9 +317,44 @@ export const useEduStore = create<EduState>()(
             },
           };
         });
+
+        try {
+          const { data: center } = await supabase
+            .from("learning_centers")
+            .select("views_count")
+            .eq("id", centerId)
+            .single();
+
+          if (center) {
+            const newViews = (center.views_count || 0) + 1;
+            await supabase
+              .from("learning_centers")
+              .update({ views_count: newViews })
+              .eq("id", centerId);
+
+            const { data: currentView } = await supabase
+              .from("center_views")
+              .select("count")
+              .eq("center_id", centerId)
+              .maybeSingle();
+
+            if (currentView) {
+              await supabase
+                .from("center_views")
+                .update({ count: currentView.count + 1 })
+                .eq("center_id", centerId);
+            } else {
+              await supabase
+                .from("center_views")
+                .insert({ center_id: centerId, count: 1 });
+            }
+          }
+        } catch (error) {
+          console.error("Error incrementing center view in Supabase:", error);
+        }
       },
 
-      trackDirectionView: (direction) => {
+      trackDirectionView: async (direction) => {
         set((state) => {
           const existingIndex = state.stats.directionViews.findIndex(
             (dv) => dv.direction === direction
@@ -208,114 +377,199 @@ export const useEduStore = create<EduState>()(
             },
           };
         });
+
+        try {
+          const { data: view } = await supabase
+            .from("direction_views")
+            .select("count")
+            .eq("direction", direction)
+            .maybeSingle();
+
+          if (view) {
+            await supabase
+              .from("direction_views")
+              .update({ count: view.count + 1 })
+              .eq("direction", direction);
+          } else {
+            await supabase
+              .from("direction_views")
+              .insert({ direction, count: 1 });
+          }
+        } catch (error) {
+          console.error("Error tracking direction view in Supabase:", error);
+        }
       },
 
-      incrementTotalVisitors: () => {
+      incrementTotalVisitors: async () => {
         set((state) => ({
           stats: {
             ...state.stats,
             totalVisitors: (state.stats.totalVisitors || 0) + 1,
           },
         }));
+
+        try {
+          const { data: stat } = await supabase
+            .from("stats_general")
+            .select("value")
+            .eq("key", "total_visitors")
+            .maybeSingle();
+
+          if (stat) {
+            await supabase
+              .from("stats_general")
+              .update({ value: stat.value + 1 })
+              .eq("key", "total_visitors");
+          } else {
+            await supabase
+              .from("stats_general")
+              .insert({ key: "total_visitors", value: 1421 });
+          }
+        } catch (error) {
+          console.error("Error incrementing total visitors in Supabase:", error);
+        }
       },
 
-      // Feedback & Rating Recalculation
-      addFeedback: (fbData) => {
-        const newFb: Feedback = {
-          ...fbData,
-          id: "fb-" + Date.now(),
-          createdAt: new Date().toISOString().split("T")[0],
-        };
+      addFeedback: async (fbData) => {
+        const newFbId = "fb-" + Date.now();
+        const createdAtDate = new Date().toISOString().split("T")[0];
 
-        set((state) => {
-          const newFeedbacks = [newFb, ...state.feedbacks];
+        try {
+          const { error } = await supabase.from("feedbacks").insert({
+            id: newFbId,
+            center_id: fbData.centerId,
+            user_name: fbData.userName,
+            rating: fbData.rating,
+            comment: fbData.comment,
+            created_at: createdAtDate,
+          });
 
-          // Recalculate average rating for the target center
-          const centerFeedbacks = newFeedbacks.filter(
-            (f) => f.centerId === fbData.centerId
-          );
-
-          let newAvgRating = 4.8;
-          if (centerFeedbacks.length > 0) {
-            const sum = centerFeedbacks.reduce((acc, f) => acc + f.rating, 0);
-            newAvgRating = parseFloat((sum / centerFeedbacks.length).toFixed(1));
+          if (error) {
+            console.error("Error inserting feedback in Supabase:", error);
+            return;
           }
 
-          const updatedCenters = state.centers.map((c) =>
-            c.id === fbData.centerId ? { ...c, rating: newAvgRating } : c
-          );
+          set((state) => {
+            const newFb: Feedback = {
+              ...fbData,
+              id: newFbId,
+              createdAt: createdAtDate,
+            };
+            const newFeedbacks = [newFb, ...state.feedbacks];
 
-          return {
-            feedbacks: newFeedbacks,
-            centers: updatedCenters,
-          };
-        });
+            const centerFeedbacks = newFeedbacks.filter(
+              (f) => f.centerId === fbData.centerId
+            );
+
+            let newAvgRating = 4.8;
+            if (centerFeedbacks.length > 0) {
+              const sum = centerFeedbacks.reduce((acc, f) => acc + f.rating, 0);
+              newAvgRating = parseFloat((sum / centerFeedbacks.length).toFixed(1));
+            }
+
+            // Sync rating update to Supabase
+            supabase
+              .from("learning_centers")
+              .update({ rating: newAvgRating })
+              .eq("id", fbData.centerId)
+              .then(({ error: ratingError }) => {
+                if (ratingError)
+                  console.error("Error updating center rating:", ratingError);
+              });
+
+            const updatedCenters = state.centers.map((c) =>
+              c.id === fbData.centerId ? { ...c, rating: newAvgRating } : c
+            );
+
+            return {
+              feedbacks: newFeedbacks,
+              centers: updatedCenters,
+            };
+          });
+        } catch (error) {
+          console.error("Error adding feedback:", error);
+        }
       },
 
-      deleteFeedback: (id) => {
-        set((state) => {
-          const targetFb = state.feedbacks.find((f) => f.id === id);
-          const newFeedbacks = state.feedbacks.filter((f) => f.id !== id);
+      deleteFeedback: async (id) => {
+        const targetFb = get().feedbacks.find((f) => f.id === id);
+        if (!targetFb) return;
 
-          if (!targetFb) return { feedbacks: newFeedbacks };
-
-          // Recalculate rating
-          const centerFeedbacks = newFeedbacks.filter(
-            (f) => f.centerId === targetFb.centerId
-          );
-
-          let newAvgRating = 4.8;
-          if (centerFeedbacks.length > 0) {
-            const sum = centerFeedbacks.reduce((acc, f) => acc + f.rating, 0);
-            newAvgRating = parseFloat((sum / centerFeedbacks.length).toFixed(1));
+        try {
+          const { error } = await supabase
+            .from("feedbacks")
+            .delete()
+            .eq("id", id);
+          if (error) {
+            console.error("Error deleting feedback from Supabase:", error);
+            return;
           }
 
-          const updatedCenters = state.centers.map((c) =>
-            c.id === targetFb.centerId ? { ...c, rating: newAvgRating } : c
-          );
+          set((state) => {
+            const newFeedbacks = state.feedbacks.filter((f) => f.id !== id);
+            const centerFeedbacks = newFeedbacks.filter(
+              (f) => f.centerId === targetFb.centerId
+            );
 
-          return {
-            feedbacks: newFeedbacks,
-            centers: updatedCenters,
-          };
-        });
+            let newAvgRating = 4.8;
+            if (centerFeedbacks.length > 0) {
+              const sum = centerFeedbacks.reduce((acc, f) => acc + f.rating, 0);
+              newAvgRating = parseFloat((sum / centerFeedbacks.length).toFixed(1));
+            }
+
+            // Sync rating update to Supabase
+            supabase
+              .from("learning_centers")
+              .update({ rating: newAvgRating })
+              .eq("id", targetFb.centerId)
+              .then(({ error: ratingError }) => {
+                if (ratingError)
+                  console.error("Error updating center rating:", ratingError);
+              });
+
+            const updatedCenters = state.centers.map((c) =>
+              c.id === targetFb.centerId ? { ...c, rating: newAvgRating } : c
+            );
+
+            return {
+              feedbacks: newFeedbacks,
+              centers: updatedCenters,
+            };
+          });
+        } catch (error) {
+          console.error("Error deleting feedback:", error);
+        }
       },
 
-      login: (username, password) => {
+      login: async (username, password) => {
         const cleanUser = username.trim().toLowerCase();
         const cleanPass = password.trim();
-        const foundAdmin = get().admins.find(
-          (a) => a.username.toLowerCase() === cleanUser && a.password === cleanPass
-        );
 
-        if (foundAdmin) {
-          set({ currentAdmin: foundAdmin, isAdminLoggedIn: true });
-          return true;
-        }
+        try {
+          const { data: foundAdmin, error } = await supabase
+            .from("admins")
+            .select("*")
+            .eq("username", cleanUser)
+            .eq("password", cleanPass)
+            .maybeSingle();
 
-        // Fallback for default superadmin / admin credentials if not matched in list
-        if ((cleanUser === "admin" || cleanUser === "superadmin") && cleanPass === "fazliddin2580") {
-          const defaultSuperAdmin: AdminUser = {
-            id: "admin-super-1",
-            username: username,
-            name: "Fazliddin Qodirov (Super Admin)",
-            role: "super_admin",
-            createdAt: "2024-01-01",
-          };
-          set({ currentAdmin: defaultSuperAdmin, isAdminLoggedIn: true });
-          return true;
-        }
+          if (error) {
+            console.error("Error querying admin from Supabase:", error);
+          }
 
-        if (cleanUser === "center_admin" && cleanPass === "admin123") {
-          const defaultAdmin: AdminUser = {
-            id: "admin-center-1",
-            username: "center_admin",
-            name: "Jasur Rahimov (Markaz Admini)",
-            role: "admin",
-            createdAt: "2024-02-15",
-          };
-          set({ currentAdmin: defaultAdmin, isAdminLoggedIn: true });
-          return true;
+          if (foundAdmin) {
+            const adminUser: AdminUser = {
+              id: foundAdmin.id,
+              username: foundAdmin.username,
+              name: foundAdmin.name,
+              role: foundAdmin.role as any,
+              createdAt: foundAdmin.created_at,
+            };
+            set({ currentAdmin: adminUser, isAdminLoggedIn: true });
+            return true;
+          }
+        } catch (error) {
+          console.error("Login request failed:", error);
         }
 
         return false;
@@ -323,112 +577,378 @@ export const useEduStore = create<EduState>()(
 
       logout: () => set({ currentAdmin: null, isAdminLoggedIn: false }),
 
-      // CRUD Admins
-      addAdmin: (adminData) => {
-        const newAdmin: AdminUser = {
-          ...adminData,
+      addAdmin: async (adminData) => {
+        const newAdmin = {
           id: "admin-" + Date.now(),
-          createdAt: new Date().toISOString().split("T")[0],
+          username: adminData.username,
+          password: adminData.password || "",
+          name: adminData.name,
+          role: adminData.role,
+          created_at: new Date().toISOString().split("T")[0],
         };
-        set((state) => ({ admins: [newAdmin, ...state.admins] }));
+
+        try {
+          const { error } = await supabase.from("admins").insert(newAdmin);
+          if (error) {
+            console.error("Error inserting admin in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            admins: [
+              {
+                id: newAdmin.id,
+                username: adminData.username,
+                password: adminData.password,
+                name: adminData.name,
+                role: adminData.role,
+                createdAt: newAdmin.created_at,
+              },
+              ...state.admins,
+            ],
+          }));
+        } catch (error) {
+          console.error("Error adding admin:", error);
+        }
       },
 
-      updateAdmin: (id, data) => {
-        set((state) => ({
-          admins: state.admins.map((a) => (a.id === id ? { ...a, ...data } : a)),
-          currentAdmin:
-            state.currentAdmin?.id === id
-              ? { ...state.currentAdmin, ...data }
-              : state.currentAdmin,
-        }));
+      updateAdmin: async (id, data) => {
+        const mappedData: any = {};
+        if (data.username !== undefined) mappedData.username = data.username;
+        if (data.password !== undefined) mappedData.password = data.password;
+        if (data.name !== undefined) mappedData.name = data.name;
+        if (data.role !== undefined) mappedData.role = data.role;
+
+        try {
+          const { error } = await supabase
+            .from("admins")
+            .update(mappedData)
+            .eq("id", id);
+
+          if (error) {
+            console.error("Error updating admin in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            admins: state.admins.map((a) => (a.id === id ? { ...a, ...data } : a)),
+            currentAdmin:
+              state.currentAdmin?.id === id
+                ? { ...state.currentAdmin, ...data }
+                : state.currentAdmin,
+          }));
+        } catch (error) {
+          console.error("Error updating admin:", error);
+        }
       },
 
-      deleteAdmin: (id) => {
-        set((state) => ({
-          admins: state.admins.filter((a) => a.id !== id),
-        }));
+      deleteAdmin: async (id) => {
+        try {
+          const { error } = await supabase.from("admins").delete().eq("id", id);
+          if (error) {
+            console.error("Error deleting admin from Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            admins: state.admins.filter((a) => a.id !== id),
+          }));
+        } catch (error) {
+          console.error("Error deleting admin:", error);
+        }
       },
 
-      // CRUD Operations
-      addCenter: (centerData) => {
+      addCenter: async (centerData) => {
         const currentAdmin = get().currentAdmin;
-        const newCenter: LearningCenter = {
-          ...centerData,
-          id: "center-" + Date.now(),
-          createdBy: currentAdmin?.id || "admin-super-1",
-          viewsCount: 0,
-          createdAt: new Date().toISOString().split("T")[0],
+        const newCenterId = "center-" + Date.now();
+        const createdAtDate = new Date().toISOString().split("T")[0];
+
+        const newCenterDb = {
+          id: newCenterId,
+          name: centerData.name,
+          address: centerData.address,
+          district: centerData.district,
+          phone: centerData.phone,
+          image: centerData.image,
+          description: centerData.description,
+          rating: 5.0,
+          views_count: 0,
+          lat: centerData.lat,
+          lng: centerData.lng,
+          created_at: createdAtDate,
+          created_by: currentAdmin?.id || "admin-super-1",
         };
-        set((state) => ({ centers: [newCenter, ...state.centers] }));
+
+        try {
+          const { error } = await supabase
+            .from("learning_centers")
+            .insert(newCenterDb);
+          if (error) {
+            console.error("Error adding center in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            centers: [
+              {
+                ...centerData,
+                id: newCenterId,
+                rating: 5.0,
+                viewsCount: 0,
+                createdAt: createdAtDate,
+                createdBy: newCenterDb.created_by,
+              },
+              ...state.centers,
+            ],
+          }));
+        } catch (error) {
+          console.error("Error adding center:", error);
+        }
       },
 
-      updateCenter: (id, data) => {
-        set((state) => ({
-          centers: state.centers.map((c) =>
-            c.id === id ? { ...c, ...data } : c
-          ),
-        }));
+      updateCenter: async (id, data) => {
+        const mappedData: any = {};
+        if (data.name !== undefined) mappedData.name = data.name;
+        if (data.address !== undefined) mappedData.address = data.address;
+        if (data.district !== undefined) mappedData.district = data.district;
+        if (data.phone !== undefined) mappedData.phone = data.phone;
+        if (data.image !== undefined) mappedData.image = data.image;
+        if (data.description !== undefined)
+          mappedData.description = data.description;
+        if (data.rating !== undefined) mappedData.rating = data.rating;
+        if (data.viewsCount !== undefined)
+          mappedData.views_count = data.viewsCount;
+        if (data.lat !== undefined) mappedData.lat = data.lat;
+        if (data.lng !== undefined) mappedData.lng = data.lng;
+
+        try {
+          const { error } = await supabase
+            .from("learning_centers")
+            .update(mappedData)
+            .eq("id", id);
+
+          if (error) {
+            console.error("Error updating center in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            centers: state.centers.map((c) =>
+              c.id === id ? { ...c, ...data } : c
+            ),
+          }));
+        } catch (error) {
+          console.error("Error updating center:", error);
+        }
       },
 
-      deleteCenter: (id) => {
-        set((state) => ({
-          centers: state.centers.filter((c) => c.id !== id),
-          courses: state.courses.filter((c) => c.centerId !== id),
-          teachers: state.teachers.filter((t) => t.centerId !== id),
-          feedbacks: state.feedbacks.filter((f) => f.centerId !== id),
-        }));
+      deleteCenter: async (id) => {
+        try {
+          const { error } = await supabase
+            .from("learning_centers")
+            .delete()
+            .eq("id", id);
+          if (error) {
+            console.error("Error deleting center from Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            centers: state.centers.filter((c) => c.id !== id),
+            courses: state.courses.filter((c) => c.centerId !== id),
+            teachers: state.teachers.filter((t) => t.centerId !== id),
+            feedbacks: state.feedbacks.filter((f) => f.centerId !== id),
+          }));
+        } catch (error) {
+          console.error("Error deleting center:", error);
+        }
       },
 
-      addCourse: (courseData) => {
-        const newCourse: Course = {
-          ...courseData,
-          id: "course-" + Date.now(),
+      addCourse: async (courseData) => {
+        const newCourseId = "course-" + Date.now();
+        const newCourseDb = {
+          id: newCourseId,
+          center_id: courseData.centerId,
+          direction: courseData.direction,
+          name: courseData.name,
+          price: courseData.price,
+          duration: courseData.duration,
+          teacher_id: courseData.teacherId || null,
+          description: courseData.description,
+          level: courseData.level,
         };
-        set((state) => ({ courses: [newCourse, ...state.courses] }));
+
+        try {
+          const { error } = await supabase.from("courses").insert(newCourseDb);
+          if (error) {
+            console.error("Error adding course in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            courses: [
+              {
+                ...courseData,
+                id: newCourseId,
+              },
+              ...state.courses,
+            ],
+          }));
+        } catch (error) {
+          console.error("Error adding course:", error);
+        }
       },
 
-      updateCourse: (id, data) => {
-        set((state) => ({
-          courses: state.courses.map((c) =>
-            c.id === id ? { ...c, ...data } : c
-          ),
-        }));
+      updateCourse: async (id, data) => {
+        const mappedData: any = {};
+        if (data.centerId !== undefined) mappedData.center_id = data.centerId;
+        if (data.direction !== undefined) mappedData.direction = data.direction;
+        if (data.name !== undefined) mappedData.name = data.name;
+        if (data.price !== undefined) mappedData.price = data.price;
+        if (data.duration !== undefined) mappedData.duration = data.duration;
+        if (data.teacherId !== undefined) mappedData.teacher_id = data.teacherId;
+        if (data.description !== undefined)
+          mappedData.description = data.description;
+        if (data.level !== undefined) mappedData.level = data.level;
+
+        try {
+          const { error } = await supabase
+            .from("courses")
+            .update(mappedData)
+            .eq("id", id);
+
+          if (error) {
+            console.error("Error updating course in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            courses: state.courses.map((c) =>
+              c.id === id ? { ...c, ...data } : c
+            ),
+          }));
+        } catch (error) {
+          console.error("Error updating course:", error);
+        }
       },
 
-      deleteCourse: (id) => {
-        set((state) => ({
-          courses: state.courses.filter((c) => c.id !== id),
-        }));
+      deleteCourse: async (id) => {
+        try {
+          const { error } = await supabase.from("courses").delete().eq("id", id);
+          if (error) {
+            console.error("Error deleting course from Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            courses: state.courses.filter((c) => c.id !== id),
+          }));
+        } catch (error) {
+          console.error("Error deleting course:", error);
+        }
       },
 
-      addTeacher: (teacherData) => {
-        const newTeacher: Teacher = {
-          ...teacherData,
-          id: "teacher-" + Date.now(),
+      addTeacher: async (teacherData) => {
+        const newTeacherId = "teacher-" + Date.now();
+        const newTeacherDb = {
+          id: newTeacherId,
+          center_id: teacherData.centerId,
+          name: teacherData.name,
+          photo: teacherData.photo,
+          bio: teacherData.bio,
+          experience: teacherData.experience,
+          results: teacherData.results || [],
+          phone: teacherData.contact.phone,
+          telegram: teacherData.contact.telegram || null,
+          instagram: teacherData.contact.instagram || null,
         };
-        set((state) => ({ teachers: [newTeacher, ...state.teachers] }));
+
+        try {
+          const { error } = await supabase.from("teachers").insert(newTeacherDb);
+          if (error) {
+            console.error("Error adding teacher in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            teachers: [
+              {
+                ...teacherData,
+                id: newTeacherId,
+              },
+              ...state.teachers,
+            ],
+          }));
+        } catch (error) {
+          console.error("Error adding teacher:", error);
+        }
       },
 
-      updateTeacher: (id, data) => {
-        set((state) => ({
-          teachers: state.teachers.map((t) =>
-            t.id === id ? { ...t, ...data } : t
-          ),
-        }));
+      updateTeacher: async (id, data) => {
+        const mappedData: any = {};
+        if (data.centerId !== undefined) mappedData.center_id = data.centerId;
+        if (data.name !== undefined) mappedData.name = data.name;
+        if (data.photo !== undefined) mappedData.photo = data.photo;
+        if (data.bio !== undefined) mappedData.bio = data.bio;
+        if (data.experience !== undefined)
+          mappedData.experience = data.experience;
+        if (data.results !== undefined) mappedData.results = data.results;
+        if (data.contact?.phone !== undefined)
+          mappedData.phone = data.contact.phone;
+        if (data.contact?.telegram !== undefined)
+          mappedData.telegram = data.contact.telegram;
+        if (data.contact?.instagram !== undefined)
+          mappedData.instagram = data.contact.instagram;
+
+        try {
+          const { error } = await supabase
+            .from("teachers")
+            .update(mappedData)
+            .eq("id", id);
+
+          if (error) {
+            console.error("Error updating teacher in Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            teachers: state.teachers.map((t) =>
+              t.id === id ? { ...t, ...data } : t
+            ),
+          }));
+        } catch (error) {
+          console.error("Error updating teacher:", error);
+        }
       },
 
-      deleteTeacher: (id) => {
-        set((state) => ({
-          teachers: state.teachers.filter((t) => t.id !== id),
-          courses: state.courses.map((c) =>
-            c.teacherId === id ? { ...c, teacherId: "" } : c
-          ),
-        }));
+      deleteTeacher: async (id) => {
+        try {
+          const { error } = await supabase.from("teachers").delete().eq("id", id);
+          if (error) {
+            console.error("Error deleting teacher from Supabase:", error);
+            return;
+          }
+
+          set((state) => ({
+            teachers: state.teachers.filter((t) => t.id !== id),
+            courses: state.courses.map((c) =>
+              c.teacherId === id ? { ...c, teacherId: "" } : c
+            ),
+          }));
+        } catch (error) {
+          console.error("Error deleting teacher:", error);
+        }
       },
     }),
     {
       name: "eduqash_storage",
       storage: createJSONStorage(() => localStorage),
+      // Only persist auth and theme states to prevent local storage overwriting server state
+      partialize: (state) => ({
+        theme: state.theme,
+        isAdminLoggedIn: state.isAdminLoggedIn,
+        currentAdmin: state.currentAdmin,
+      }),
     }
   )
 );

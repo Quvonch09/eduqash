@@ -5,11 +5,13 @@ import { useEduStore } from "@/store/useEduStore";
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useEduStore((state) => state.theme);
+  const fetchData = useEduStore((state) => state.fetchData);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     if (mounted) {

@@ -15,11 +15,11 @@ export default function AdminLoginPage() {
   const toggleTheme = useEduStore((state) => state.toggleTheme);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const success = login(username, password);
+    const success = await login(username, password);
 
     if (success) {
       router.push("/admin");
