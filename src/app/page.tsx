@@ -78,6 +78,24 @@ export default function LandingPage() {
   );
   const [viewMode, setViewMode] = useState<"grid" | "map" | "split">("split");
 
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+
+  // Sync local search when global searchQuery changes (e.g. tag clicked or filters cleared)
+  useEffect(() => {
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
+
+  // Debounce search query updates to the global store
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchQuery(localSearch);
+    }, 250);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [localSearch, setSearchQuery]);
+
   // Track site visitor session
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -89,17 +107,26 @@ export default function LandingPage() {
     }
   }, [incrementTotalVisitors]);
 
-  // Pre-calculate courses text per center for lightning-fast search lookup
-  const coursesByCenterMap = useMemo(() => {
-    const map = new Map<string, string[]>();
+  // Pre-calculate courses data and counts per center for lightning-fast search lookup
+  const coursesDataByCenterMap = useMemo(() => {
+    const searchMap = new Map<string, string[]>();
+    const countMap = new Map<string, number>();
+
     for (let i = 0; i < courses.length; i++) {
       const c = courses[i];
-      const existing = map.get(c.centerId) || [];
-      existing.push(`${c.name.toLowerCase()} ${c.direction.toLowerCase()} ${c.level.toLowerCase()}`);
-      map.set(c.centerId, existing);
+
+      const existingSearch = searchMap.get(c.centerId) || [];
+      existingSearch.push(`${c.name.toLowerCase()} ${c.direction.toLowerCase()} ${c.level.toLowerCase()}`);
+      searchMap.set(c.centerId, existingSearch);
+
+      const currentCount = countMap.get(c.centerId) || 0;
+      countMap.set(c.centerId, currentCount + 1);
     }
-    return map;
+    return { searchMap, countMap };
   }, [courses]);
+
+  const coursesByCenterMap = coursesDataByCenterMap.searchMap;
+  const coursesCountMap = coursesDataByCenterMap.countMap;
 
   // Real-time filtering based on searchQuery, district & course directions
   const filteredCenters = useMemo(() => {
@@ -134,6 +161,7 @@ export default function LandingPage() {
   };
 
   const handleTagClick = (tag: Direction) => {
+    setLocalSearch(tag);
     setSearchQuery(tag);
     trackSearch(tag);
     trackDirectionView(tag);
@@ -242,14 +270,17 @@ export default function LandingPage() {
               <Search className="w-5 h-5 sm:w-6 sm:h-6 text-brand-600 dark:text-brand-400 ml-2 sm:ml-3 shrink-0" />
               <input
                 type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
                 placeholder="Yo'nalish kiriting, masalan: IT, Ingliz tili, Matematika..."
                 className="w-full bg-transparent text-slate-900 dark:text-white font-medium placeholder-slate-400 text-xs sm:text-base focus:outline-none px-1 sm:px-2 py-1"
               />
-              {searchQuery && (
+              {localSearch && (
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => {
+                    setLocalSearch("");
+                    setSearchQuery("");
+                  }}
                   className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition"
                 >
                   <X className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -258,8 +289,9 @@ export default function LandingPage() {
               <div className="hidden sm:block">
                 <button
                   onClick={() => {
-                    if (searchQuery.trim()) {
-                      trackSearch(searchQuery.trim());
+                    if (localSearch.trim()) {
+                      setSearchQuery(localSearch);
+                      trackSearch(localSearch.trim());
                     }
                   }}
                   className="px-5 sm:px-6 py-2.5 sm:py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-md shadow-brand-600/30"
@@ -405,6 +437,7 @@ export default function LandingPage() {
                   <CenterCard
                     key={center.id}
                     center={center}
+                    coursesCount={coursesCountMap.get(center.id) || 0}
                     onSelect={handleSelectCenter}
                   />
                 ))}
@@ -429,6 +462,7 @@ export default function LandingPage() {
                     <CenterCard
                       key={center.id}
                       center={center}
+                      coursesCount={coursesCountMap.get(center.id) || 0}
                       onSelect={handleSelectCenter}
                     />
                   ))}

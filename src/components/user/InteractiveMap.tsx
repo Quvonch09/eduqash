@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useMemo } from "react";
 import { LearningCenter } from "@/types";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -12,7 +12,7 @@ interface InteractiveMapProps {
   selectedCenterId?: string | null;
 }
 
-export default function InteractiveMap({
+const InteractiveMap = memo(function InteractiveMap({
   centers,
   onSelectCenter,
 }: InteractiveMapProps) {
@@ -20,6 +20,17 @@ export default function InteractiveMap({
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  const customIcon = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return L.divIcon({
+      className: "custom-div-icon",
+      html: `<div class="custom-marker-pin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
+      iconSize: [38, 38],
+      iconAnchor: [19, 38],
+      popupAnchor: [0, -38],
+    });
   }, []);
 
   if (!isMounted) {
@@ -30,14 +41,6 @@ export default function InteractiveMap({
       </div>
     );
   }
-
-  const customIcon = L.divIcon({
-    className: "custom-div-icon",
-    html: `<div class="custom-marker-pin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
-    iconSize: [38, 38],
-    iconAnchor: [19, 38],
-    popupAnchor: [0, -38],
-  });
 
   // Default Qashqadaryo center (Qarshi)
   const defaultLat = 38.8605;
@@ -59,7 +62,7 @@ export default function InteractiveMap({
           <Marker
             key={center.id}
             position={[center.lat, center.lng]}
-            icon={customIcon}
+            icon={customIcon as L.DivIcon}
           >
             <Popup className="custom-popup max-w-xs">
               <div className="p-1">
@@ -99,4 +102,6 @@ export default function InteractiveMap({
       </MapContainer>
     </div>
   );
-}
+});
+
+export default InteractiveMap;

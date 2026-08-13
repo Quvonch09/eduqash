@@ -283,8 +283,9 @@ export const useEduStore = create<EduState>()(
 
       login: (username, password) => {
         const cleanUser = username.trim().toLowerCase();
+        const cleanPass = password.trim();
         const foundAdmin = get().admins.find(
-          (a) => a.username.toLowerCase() === cleanUser && a.password === password
+          (a) => a.username.toLowerCase() === cleanUser && a.password === cleanPass
         );
 
         if (foundAdmin) {
@@ -293,7 +294,7 @@ export const useEduStore = create<EduState>()(
         }
 
         // Fallback for default superadmin / admin credentials if not matched in list
-        if ((cleanUser === "admin" || cleanUser === "superadmin") && password === "fazliddin2580") {
+        if ((cleanUser === "admin" || cleanUser === "superadmin") && cleanPass === "fazliddin2580") {
           const defaultSuperAdmin: AdminUser = {
             id: "admin-super-1",
             username: username,
@@ -305,7 +306,7 @@ export const useEduStore = create<EduState>()(
           return true;
         }
 
-        if (cleanUser === "center_admin" && password === "admin123") {
+        if (cleanUser === "center_admin" && cleanPass === "admin123") {
           const defaultAdmin: AdminUser = {
             id: "admin-center-1",
             username: "center_admin",

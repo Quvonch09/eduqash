@@ -2,19 +2,16 @@
 
 import { memo } from "react";
 import { LearningCenter } from "@/types";
-import { useEduStore } from "@/store/useEduStore";
 import { motion } from "framer-motion";
 import { MapPin, Star, Eye, BookOpen, ChevronRight } from "lucide-react";
 
 interface CenterCardProps {
   center: LearningCenter;
+  coursesCount: number;
   onSelect: (center: LearningCenter) => void;
 }
 
-const CenterCard = memo(function CenterCard({ center, onSelect }: CenterCardProps) {
-  const coursesCount = useEduStore(
-    (state) => state.courses.filter((c) => c.centerId === center.id).length
-  );
+const CenterCard = memo(function CenterCard({ center, coursesCount, onSelect }: CenterCardProps) {
 
   return (
     <motion.div

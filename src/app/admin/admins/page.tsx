@@ -85,7 +85,7 @@ export default function AdminsManagementPage() {
     setFormData({
       name: admin.name,
       username: admin.username,
-      password: admin.password || "",
+      password: "",
       role: admin.role,
     });
     setFormError("");
