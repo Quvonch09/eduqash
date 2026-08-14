@@ -545,6 +545,7 @@ export const useEduStore = create<EduState>()(
         const cleanUser = username.trim().toLowerCase();
         const cleanPass = password.trim();
 
+        // 1. Try Supabase first
         try {
           const { data: foundAdmin, error } = await supabase
             .from("admins")
@@ -554,7 +555,7 @@ export const useEduStore = create<EduState>()(
             .maybeSingle();
 
           if (error) {
-            console.error("Error querying admin from Supabase:", error);
+            console.warn("Supabase login query error, falling back to local admins:", error.message);
           }
 
           if (foundAdmin) {
@@ -569,11 +570,24 @@ export const useEduStore = create<EduState>()(
             return true;
           }
         } catch (error) {
-          console.error("Login request failed:", error);
+          console.warn("Login Supabase request failed, falling back to local admins:", error);
+        }
+
+        // 2. Fallback: check in-memory admins list (loaded from Supabase or mock)
+        const localAdmin = get().admins.find(
+          (a) =>
+            a.username.toLowerCase() === cleanUser &&
+            a.password === cleanPass
+        );
+
+        if (localAdmin) {
+          set({ currentAdmin: localAdmin, isAdminLoggedIn: true });
+          return true;
         }
 
         return false;
       },
+
 
       logout: () => set({ currentAdmin: null, isAdminLoggedIn: false }),
 
