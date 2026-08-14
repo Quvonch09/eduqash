@@ -48,8 +48,8 @@ export default function AdminCentersPage() {
     image: "",
     description: "",
     rating: 4.8,
-    lat: 38.8605,
-    lng: 65.7891,
+    lat: "38.8605",
+    lng: "65.7891",
   });
 
   const handleOpenAddModal = () => {
@@ -62,8 +62,8 @@ export default function AdminCentersPage() {
       image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
       description: "",
       rating: 4.8,
-      lat: 38.8605,
-      lng: 65.7891,
+      lat: "38.8605",
+      lng: "65.7891",
     });
     setIsModalOpen(true);
   };
@@ -78,8 +78,8 @@ export default function AdminCentersPage() {
       image: center.image,
       description: center.description,
       rating: center.rating,
-      lat: center.lat,
-      lng: center.lng,
+      lat: String(center.lat),
+      lng: String(center.lng),
     });
     setIsModalOpen(true);
   };
@@ -98,10 +98,21 @@ export default function AdminCentersPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedLat = parseFloat(formData.lat);
+    const parsedLng = parseFloat(formData.lng);
+    if (isNaN(parsedLat) || isNaN(parsedLng)) {
+      alert("Latitude va Longitude to'g'ri son bo'lishi kerak!");
+      return;
+    }
+    const submitData = {
+      ...formData,
+      lat: parsedLat,
+      lng: parsedLng,
+    };
     if (editingCenter) {
-      updateCenter(editingCenter.id, formData);
+      updateCenter(editingCenter.id, submitData);
     } else {
-      addCenter(formData);
+      addCenter(submitData);
     }
     setIsModalOpen(false);
   };
@@ -386,10 +397,51 @@ export default function AdminCentersPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
-                      Reyting (1-5)
+                      Latitude
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={formData.lat}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          lat: e.target.value,
+                        })
+                      }
+                      placeholder="38.8605"
+                      className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                      Longitude
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={formData.lng}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          lng: e.target.value,
+                        })
+                      }
+                      placeholder="65.7891"
+                      className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Reyting - faqat super_admin uchun */}
+                {isSuperAdmin && (
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
+                      Reyting (1–5)
+                      <span className="ml-2 text-[10px] font-normal text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">Faqat Super Admin</span>
                     </label>
                     <input
                       type="number"
@@ -400,47 +452,14 @@ export default function AdminCentersPage() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          rating: parseFloat(e.target.value),
+                          rating: parseFloat(e.target.value) || formData.rating,
                         })
                       }
-                      className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white"
+                      className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     />
+                    <p className="text-[10px] text-slate-400 mt-1">Odatda reyting foydalanuvchi sharhlari asosida avtomatik hisoblanadi.</p>
                   </div>
-                  <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
-                      Latitude
-                    </label>
-                    <input
-                      type="number"
-                      step="0.0001"
-                      value={formData.lat}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          lat: parseFloat(e.target.value),
-                        })
-                      }
-                      className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
-                      Longitude
-                    </label>
-                    <input
-                      type="number"
-                      step="0.0001"
-                      value={formData.lng}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          lng: parseFloat(e.target.value),
-                        })
-                      }
-                      className="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white"
-                    />
-                  </div>
-                </div>
+                )}
 
                 <button
                   type="submit"
