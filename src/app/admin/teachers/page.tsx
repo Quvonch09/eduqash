@@ -29,9 +29,12 @@ export default function AdminTeachersPage() {
   const deleteTeacher = useEduStore((state) => state.deleteTeacher);
 
   const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const isManager = currentAdmin?.role === "manager";
   const allowedCenters = isSuperAdmin
     ? centers
-    : centers.filter((c) => c.createdBy === currentAdmin.id);
+    : isManager && currentAdmin.centerId
+    ? centers.filter((c) => c.id === currentAdmin.centerId)
+    : centers.filter((c) => c.createdBy === currentAdmin.id || (currentAdmin.centerId && c.id === currentAdmin.centerId));
   const allowedCenterIds = allowedCenters.map((c) => c.id);
 
   const [search, setSearch] = useState("");

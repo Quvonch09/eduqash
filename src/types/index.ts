@@ -92,7 +92,7 @@ export interface Stats {
   totalVisitors: number;
 }
 
-export type AdminRole = "super_admin" | "admin";
+export type AdminRole = "super_admin" | "admin" | "manager";
 
 export interface AdminUser {
   id: string;
@@ -100,5 +100,6 @@ export interface AdminUser {
   password?: string;
   name: string;
   role: AdminRole;
+  centerId?: string;
   createdAt: string;
 }

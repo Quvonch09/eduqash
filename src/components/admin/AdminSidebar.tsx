@@ -29,48 +29,69 @@ export default function AdminSidebar() {
   };
 
   const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const isAdmin = currentAdmin?.role === "admin";
+  const isManager = currentAdmin?.role === "manager";
 
-  const navItems = [
-    {
-      name: "Dashboard",
-      href: "/admin",
-      icon: LayoutDashboard,
-    },
-    {
-      name: "O'quv markazlar",
-      href: "/admin/centers",
-      icon: Building2,
-    },
-    {
-      name: "Kurslar",
-      href: "/admin/courses",
-      icon: BookOpen,
-    },
-    {
-      name: "Ustozlar",
-      href: "/admin/teachers",
-      icon: Users,
-    },
-    {
-      name: "Izohlar va Reyting",
-      href: "/admin/feedbacks",
-      icon: MessageSquare,
-    },
-    {
-      name: "Statistika",
-      href: "/admin/statistics",
-      icon: BarChart3,
-    },
-    ...(isSuperAdmin
-      ? [
-          {
-            name: "Adminlar",
-            href: "/admin/admins",
-            icon: ShieldCheck,
-          },
-        ]
-      : []),
-  ];
+  const navItems = isManager
+    ? [
+        {
+          name: "Dashboard",
+          href: "/admin",
+          icon: LayoutDashboard,
+        },
+        {
+          name: "O'quv markaz",
+          href: "/admin/centers",
+          icon: Building2,
+        },
+        {
+          name: "Kurslar",
+          href: "/admin/courses",
+          icon: BookOpen,
+        },
+        {
+          name: "Ustozlar",
+          href: "/admin/teachers",
+          icon: Users,
+        },
+      ]
+    : [
+        {
+          name: "Dashboard",
+          href: "/admin",
+          icon: LayoutDashboard,
+        },
+        {
+          name: "O'quv markazlar",
+          href: "/admin/centers",
+          icon: Building2,
+        },
+        {
+          name: "Kurslar",
+          href: "/admin/courses",
+          icon: BookOpen,
+        },
+        {
+          name: "Ustozlar",
+          href: "/admin/teachers",
+          icon: Users,
+        },
+        {
+          name: "Izohlar va Reyting",
+          href: "/admin/feedbacks",
+          icon: MessageSquare,
+        },
+        {
+          name: "Statistika",
+          href: "/admin/statistics",
+          icon: BarChart3,
+        },
+        {
+          name: isSuperAdmin ? "Admin & Menejerlar" : "Menejerlar",
+          href: "/admin/admins",
+          icon: ShieldCheck,
+        },
+      ];
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 h-screen sticky top-0 border-r border-slate-800">

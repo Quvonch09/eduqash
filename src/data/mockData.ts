@@ -393,4 +393,13 @@ export const initialAdmins: AdminUser[] = [
     role: "admin",
     createdAt: "2024-03-10",
   },
+  {
+    id: "admin-manager-1",
+    username: "manager",
+    password: "manager123",
+    name: "Bekzod Shukurov (Menejer)",
+    role: "manager",
+    centerId: "center-1",
+    createdAt: "2024-04-01",
+  },
 ];

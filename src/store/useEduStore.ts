@@ -216,6 +216,7 @@ export const useEduStore = create<EduState>()(
               password: a.password,
               name: a.name,
               role: a.role as any,
+              centerId: a.center_id,
               createdAt: a.created_at,
             })),
             stats: {
@@ -564,6 +565,7 @@ export const useEduStore = create<EduState>()(
               username: foundAdmin.username,
               name: foundAdmin.name,
               role: foundAdmin.role as any,
+              centerId: foundAdmin.center_id,
               createdAt: foundAdmin.created_at,
             };
             set({ currentAdmin: adminUser, isAdminLoggedIn: true });
@@ -598,6 +600,7 @@ export const useEduStore = create<EduState>()(
           password: adminData.password || "",
           name: adminData.name,
           role: adminData.role,
+          center_id: adminData.centerId || null,
           created_at: new Date().toISOString().split("T")[0],
         };
 
@@ -616,6 +619,7 @@ export const useEduStore = create<EduState>()(
                 password: adminData.password,
                 name: adminData.name,
                 role: adminData.role,
+                centerId: adminData.centerId,
                 createdAt: newAdmin.created_at,
               },
               ...state.admins,
@@ -632,6 +636,7 @@ export const useEduStore = create<EduState>()(
         if (data.password !== undefined) mappedData.password = data.password;
         if (data.name !== undefined) mappedData.name = data.name;
         if (data.role !== undefined) mappedData.role = data.role;
+        if (data.centerId !== undefined) mappedData.center_id = data.centerId;
 
         try {
           const { error } = await supabase

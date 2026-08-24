@@ -32,6 +32,7 @@ export default function AdminCentersPage() {
   const deleteCenter = useEduStore((state) => state.deleteCenter);
 
   const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const isManager = currentAdmin?.role === "manager";
 
   const [search, setSearch] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("Barchasi");
@@ -112,20 +113,29 @@ export default function AdminCentersPage() {
     if (editingCenter) {
       updateCenter(editingCenter.id, submitData);
     } else {
-      addCenter(submitData);
+      addCenter({
+        ...submitData,
+        createdBy: currentAdmin?.id,
+      });
     }
     setIsModalOpen(false);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Haqiqatan ham bu o'quv markazini o'chirmoqchimisiz?")) {
+    if (isManager) {
+      alert("Menejerlar o'quv markazni o'chira olmaydi!");
+      return;
+    }
+    if (confirm("Haqiqatan ham ushbu markazni o'chirmoqchimisiz?")) {
       deleteCenter(id);
     }
   };
 
   const userCenters = isSuperAdmin
     ? centers
-    : centers.filter((c) => c.createdBy === currentAdmin.id);
+    : isManager && currentAdmin.centerId
+    ? centers.filter((c) => c.id === currentAdmin.centerId)
+    : centers.filter((c) => c.createdBy === currentAdmin.id || (currentAdmin.centerId && c.id === currentAdmin.centerId));
 
   const filteredCenters = userCenters.filter((c) => {
     const matchesDistrict =
@@ -142,19 +152,23 @@ export default function AdminCentersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-            O'quv Markazlarni Boshqarish
+            {isManager ? "Mening O'quv Markazim" : "O'quv Markazlarni Boshqarish"}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Qashqadaryodagi ta'lim maskanlarini qo'shish, tahrirlash va o'chirish
+            {isManager
+              ? "O'quv markazingiz ma'lumotlari, manzili va tavsifini tahrirlang"
+              : "Qashqadaryodagi ta'lim maskanlarini qo'shish, tahrirlash va o'chirish"}
           </p>
         </div>
-        <button
-          onClick={handleOpenAddModal}
-          className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-600/30 transition self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Yangi Markaz Qo'shish</span>
-        </button>
+        {!isManager && (
+          <button
+            onClick={handleOpenAddModal}
+            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-600/30 transition self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Yangi Markaz Qo'shish</span>
+          </button>
+        )}
       </div>
 
       {/* Filter & Search Controls */}

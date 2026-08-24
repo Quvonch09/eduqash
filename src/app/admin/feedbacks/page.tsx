@@ -19,6 +19,26 @@ export default function AdminFeedbacksPage() {
   const deleteFeedback = useEduStore((state) => state.deleteFeedback);
 
   const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const isManager = currentAdmin?.role === "manager";
+
+  if (isManager) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-4 bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
+            <MessageSquare className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">
+            Ruxsat berilmagan!
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Fikr-mulohazalarni boshqarish bo'limi faqat Administratorlar uchun mo'ljallangan.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const allowedCenters = isSuperAdmin
     ? centers
     : centers.filter((c) => c.createdBy === currentAdmin.id);

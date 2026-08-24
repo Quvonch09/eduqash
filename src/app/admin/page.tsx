@@ -25,10 +25,13 @@ export default function AdminDashboardPage() {
   const currentAdmin = useEduStore((state) => state.currentAdmin);
 
   const isSuperAdmin = !currentAdmin || currentAdmin.role === "super_admin";
+  const isManager = currentAdmin?.role === "manager";
 
   const userCenters = isSuperAdmin
     ? centers
-    : centers.filter((c) => c.createdBy === currentAdmin.id);
+    : isManager && currentAdmin.centerId
+    ? centers.filter((c) => c.id === currentAdmin.centerId)
+    : centers.filter((c) => c.createdBy === currentAdmin.id || (currentAdmin.centerId && c.id === currentAdmin.centerId));
 
   const allowedCenterIds = userCenters.map((c) => c.id);
 
@@ -57,82 +60,158 @@ export default function AdminDashboardPage() {
       {/* Page Title Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-          Dashboard — Boshqaruv statistikasi
+          {isManager ? "Menejer Boshqaruv Paneli" : "Dashboard — Boshqaruv statistikasi"}
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Qashqadaryo ta'lim platformasining umumiy holati va tezkor harakatlar
+          {isManager
+            ? "O'quv markazingiz kurslari va ustozlarini boshqaring"
+            : "Qashqadaryo ta'lim platformasining umumiy holati va tezkor harakatlar"}
         </p>
       </div>
 
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
-          <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              Sayt Tashrifchilari
-            </span>
-            <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {totalVisitors}
-            </span>
-            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 inline-flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> Real vaqtdagi tashriflar
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <Globe className="w-6 h-6" />
-          </div>
-        </div>
+        {isManager ? (
+          <>
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Markaz Kurslari
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {userCourses.length}
+                </span>
+                <span className="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-1 inline-block">
+                  Faol yo'nalishlar
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+                <BookOpen className="w-6 h-6" />
+              </div>
+            </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
-          <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              O'quv Markazlar
-            </span>
-            <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {userCenters.length}
-            </span>
-            <span className="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-1 inline-block">
-              {isSuperAdmin ? "Qashqadaryo tumanlarida" : "Sizning markazlaringiz"}
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-            <Building2 className="w-6 h-6" />
-          </div>
-        </div>
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Ustozlar Soni
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {userTeachers.length}
+                </span>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 inline-block">
+                  Biriktirilgan ustozlar
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Users className="w-6 h-6" />
+              </div>
+            </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
-          <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              Fikr-mulohazalar
-            </span>
-            <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {userFeedbacks.length}
-            </span>
-            <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1 inline-block">
-              Foydalanuvchilar izohlari
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-            <MessageSquare className="w-6 h-6" />
-          </div>
-        </div>
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Markaz Ko'rishlari
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {totalViews}
+                </span>
+                <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold mt-1 inline-block">
+                  Tashriflar qiziqishi
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <Eye className="w-6 h-6" />
+              </div>
+            </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
-          <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-              Jami Qidiruvlar
-            </span>
-            <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
-              {totalSearches}
-            </span>
-            <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold mt-1 inline-block">
-              {totalViews} marta ko'rilgan
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-            <Search className="w-6 h-6" />
-          </div>
-        </div>
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Markaz Reytingi
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  ★ {userCenters[0]?.rating || 4.8}
+                </span>
+                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1 inline-block">
+                  {userFeedbacks.length} ta izohlar
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Building2 className="w-6 h-6" />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Sayt Tashrifchilari
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {totalVisitors}
+                </span>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 inline-flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" /> Real vaqtdagi tashriflar
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Globe className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  O'quv Markazlar
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {userCenters.length}
+                </span>
+                <span className="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-1 inline-block">
+                  {isSuperAdmin ? "Qashqadaryo tumanlarida" : "Sizning markazlaringiz"}
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+                <Building2 className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Fikr-mulohazalar
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {userFeedbacks.length}
+                </span>
+                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold mt-1 inline-block">
+                  Foydalanuvchilar izohlari
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-colors">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+                  Jami Qidiruvlar
+                </span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {totalSearches}
+                </span>
+                <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold mt-1 inline-block">
+                  {totalViews} marta ko'rilgan
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <Search className="w-6 h-6" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Quick Action Shortcuts */}
@@ -141,32 +220,61 @@ export default function AdminDashboardPage() {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400 text-slate-950 text-xs font-black rounded-full">
             <Sparkles className="w-3.5 h-3.5" /> Tezkor harakatlar
           </div>
-          <h3 className="text-xl font-bold">Yangi ta'lim ma'lumotlarini qo'shing</h3>
+          <h3 className="text-xl font-bold">
+            {isManager ? "Markazingiz ma'lumotlarini boshqaring" : "Yangi ta'lim ma'lumotlarini qo'shing"}
+          </h3>
           <p className="text-xs text-slate-300">
-            Tizimga yangi o'quv markazlar, yo'nalishlar va ustozlarni kiritish
+            {isManager
+              ? "Yangi kurslar va ustozlarni kiritish, markaz sahifasini yangilash"
+              : "Tizimga yangi o'quv markazlar, yo'nalishlar va ustozlarni kiritish"}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/admin/centers"
-            className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-md transition"
-          >
-            <Plus className="w-4 h-4" /> Markaz qo'shish
-          </Link>
-          <Link
-            href="/admin/feedbacks"
-            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition border border-white/20"
-          >
-            <MessageSquare className="w-4 h-4" /> Izohlarni ko'rish
-          </Link>
-          <Link
-            href="/admin/statistics"
-            className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-2 transition"
-          >
-            <span>Tahlil paneli</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          {isManager ? (
+            <>
+              <Link
+                href="/admin/courses"
+                className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-md transition"
+              >
+                <Plus className="w-4 h-4" /> Kurs qo'shish
+              </Link>
+              <Link
+                href="/admin/teachers"
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-md transition"
+              >
+                <Plus className="w-4 h-4" /> Ustoz qo'shish
+              </Link>
+              <Link
+                href="/admin/centers"
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition border border-white/20"
+              >
+                <Building2 className="w-4 h-4" /> Markaz ma'lumotlari
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/admin/centers"
+                className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-md transition"
+              >
+                <Plus className="w-4 h-4" /> Markaz qo'shish
+              </Link>
+              <Link
+                href="/admin/feedbacks"
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition border border-white/20"
+              >
+                <MessageSquare className="w-4 h-4" /> Izohlarni ko'rish
+              </Link>
+              <Link
+                href="/admin/statistics"
+                className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-2 transition"
+              >
+                <span>Tahlil paneli</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
