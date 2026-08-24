@@ -9,6 +9,7 @@ import {
   Direction,
   Feedback,
   AdminUser,
+  AdminRole,
 } from "@/types";
 import {
   initialCenters,
@@ -91,6 +92,53 @@ interface EduState {
   // Actions - Fetch Data from Supabase
   fetchData: () => Promise<void>;
 }
+
+export const parseAdminFromDb = (a: any): AdminUser => {
+  let role: AdminRole = a.role === "super_admin" ? "super_admin" : (a.role as AdminRole);
+  let name = a.name || "";
+  let centerId: string | undefined = a.center_id || undefined;
+
+  // Check if manager info is encoded in name: "Name [manager:center-1]"
+  const match = name.match(/^(.*?)\s*\[manager:([^\]]+)\]$/);
+  if (match) {
+    name = match[1].trim();
+    role = "manager";
+    centerId = match[2].trim();
+  } else if (role === "manager") {
+    role = "manager";
+  }
+
+  return {
+    id: a.id,
+    username: a.username,
+    password: a.password,
+    name: name,
+    role: role,
+    centerId: centerId,
+    createdAt: a.created_at ? a.created_at.split("T")[0] : new Date().toISOString().split("T")[0],
+  };
+};
+
+export const formatAdminForDb = (adminData: Omit<AdminUser, "id" | "createdAt"> | Partial<AdminUser>) => {
+  const result: any = {};
+  if (adminData.username !== undefined) result.username = adminData.username;
+  if (adminData.password !== undefined) result.password = adminData.password;
+
+  if (adminData.role === "manager") {
+    result.role = "admin"; // Pass Postgres CHECK constraint (admins_role_check)
+    if (adminData.name !== undefined) {
+      const cleanName = adminData.name.replace(/\s*\[manager:[^\]]+\]$/, "").trim();
+      result.name = adminData.centerId ? `${cleanName} [manager:${adminData.centerId}]` : cleanName;
+    }
+  } else {
+    if (adminData.role !== undefined) result.role = adminData.role;
+    if (adminData.name !== undefined) {
+      result.name = adminData.name.replace(/\s*\[manager:[^\]]+\]$/, "").trim();
+    }
+  }
+
+  return result;
+};
 
 export const useEduStore = create<EduState>()(
   persist(
@@ -210,15 +258,7 @@ export const useEduStore = create<EduState>()(
               comment: f.comment,
               createdAt: f.created_at,
             })),
-            admins: (admins || []).map((a) => ({
-              id: a.id,
-              username: a.username,
-              password: a.password,
-              name: a.name,
-              role: a.role as any,
-              centerId: a.center_id,
-              createdAt: a.created_at,
-            })),
+            admins: (admins || []).map(parseAdminFromDb),
             stats: {
               searchLogs: (searchLogs || []).map((s) => ({
                 query: s.query,
@@ -560,14 +600,7 @@ export const useEduStore = create<EduState>()(
           }
 
           if (foundAdmin) {
-            const adminUser: AdminUser = {
-              id: foundAdmin.id,
-              username: foundAdmin.username,
-              name: foundAdmin.name,
-              role: foundAdmin.role as any,
-              centerId: foundAdmin.center_id,
-              createdAt: foundAdmin.created_at,
-            };
+            const adminUser = parseAdminFromDb(foundAdmin);
             set({ currentAdmin: adminUser, isAdminLoggedIn: true });
             return true;
           }
@@ -594,36 +627,43 @@ export const useEduStore = create<EduState>()(
       logout: () => set({ currentAdmin: null, isAdminLoggedIn: false }),
 
       addAdmin: async (adminData) => {
-        const newAdmin = {
-          id: "admin-" + Date.now(),
+        const dbData = formatAdminForDb(adminData);
+        const newAdminId = "admin-" + Date.now();
+        const newAdminRecord = {
+          id: newAdminId,
           username: adminData.username,
           password: adminData.password || "",
-          name: adminData.name,
-          role: adminData.role,
-          center_id: adminData.centerId || null,
+          name: dbData.name || adminData.name,
+          role: dbData.role || "admin",
           created_at: new Date().toISOString().split("T")[0],
         };
 
         try {
-          const { error } = await supabase.from("admins").insert(newAdmin);
+          const { error } = await supabase.from("admins").insert(newAdminRecord);
           if (error) {
             console.error("Error inserting admin in Supabase:", error);
             return;
           }
 
+          if (adminData.role === "manager" && adminData.centerId) {
+            await supabase
+              .from("learning_centers")
+              .update({ created_by: newAdminId })
+              .eq("id", adminData.centerId);
+          }
+
+          const localAdmin: AdminUser = {
+            id: newAdminId,
+            username: adminData.username,
+            password: adminData.password,
+            name: adminData.name.replace(/\s*\[manager:[^\]]+\]$/, "").trim(),
+            role: adminData.role,
+            centerId: adminData.centerId,
+            createdAt: newAdminRecord.created_at,
+          };
+
           set((state) => ({
-            admins: [
-              {
-                id: newAdmin.id,
-                username: adminData.username,
-                password: adminData.password,
-                name: adminData.name,
-                role: adminData.role,
-                centerId: adminData.centerId,
-                createdAt: newAdmin.created_at,
-              },
-              ...state.admins,
-            ],
+            admins: [localAdmin, ...state.admins],
           }));
         } catch (error) {
           console.error("Error adding admin:", error);
@@ -631,17 +671,14 @@ export const useEduStore = create<EduState>()(
       },
 
       updateAdmin: async (id, data) => {
-        const mappedData: any = {};
-        if (data.username !== undefined) mappedData.username = data.username;
-        if (data.password !== undefined) mappedData.password = data.password;
-        if (data.name !== undefined) mappedData.name = data.name;
-        if (data.role !== undefined) mappedData.role = data.role;
-        if (data.centerId !== undefined) mappedData.center_id = data.centerId;
+        const current = get().admins.find((a) => a.id === id);
+        const merged = { ...current, ...data };
+        const dbData = formatAdminForDb(merged);
 
         try {
           const { error } = await supabase
             .from("admins")
-            .update(mappedData)
+            .update(dbData)
             .eq("id", id);
 
           if (error) {
@@ -649,11 +686,34 @@ export const useEduStore = create<EduState>()(
             return;
           }
 
+          if (merged.role === "manager" && merged.centerId) {
+            await supabase
+              .from("learning_centers")
+              .update({ created_by: id })
+              .eq("id", merged.centerId);
+          }
+
+          const cleanName = data.name
+            ? data.name.replace(/\s*\[manager:[^\]]+\]$/, "").trim()
+            : undefined;
+
           set((state) => ({
-            admins: state.admins.map((a) => (a.id === id ? { ...a, ...data } : a)),
+            admins: state.admins.map((a) =>
+              a.id === id
+                ? {
+                    ...a,
+                    ...data,
+                    ...(cleanName ? { name: cleanName } : {}),
+                  }
+                : a
+            ),
             currentAdmin:
               state.currentAdmin?.id === id
-                ? { ...state.currentAdmin, ...data }
+                ? {
+                    ...state.currentAdmin,
+                    ...data,
+                    ...(cleanName ? { name: cleanName } : {}),
+                  }
                 : state.currentAdmin,
           }));
         } catch (error) {
